@@ -1,0 +1,50 @@
+#!/bin/bash
+set -u -e -C;
+shopt -s nullglob;
+
+function err {
+    echo "$@" >&2;
+    for i in $(seq 100); do printf '\a'; sleep 0.3; done; exit 1;
+}
+function warn { echo "$@" >&2; }
+
+function ask_yN {
+    local answer='';
+    read -n 1 -s -p "$* [yN]" answer;
+    if test "${answer}" = y; then
+        echo yes;
+        return 0;
+    fi;
+    echo no;
+    return 1;
+}
+
+n="${1:?missing arg1: max number of nodes}";
+w="${2:?missing arg2: max unbalance ratio}";
+
+make testMatcher;
+dir="log-${n}-${w}";
+mkdir -p "${dir}";
+log="${dir}/log";
+
+if test -r "${log}"; then
+    count="$(wc -l <"${log}")";
+else
+    echo '# <no> <lnc> <rnc> <ec> | <mc> <t> <rss> | <mc> <t> <rss>' | tee -a "${log}";
+    count=0;
+fi;
+
+until read -t0.01 -n1 -s; do
+    count="$((count + 1))";
+    printf "%4i | %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${n}" "${w}" "${dir}/g-${count}");
+
+    c1="$(/usr/bin/time -o/tmp/t1 -f'%e %M' ./testMatcher mine "${dir}/g-${count}" "${dir}/m-${count}")";
+    printf "%4i %7.3f %7i | " "${c1}" $(cat /tmp/t1);
+
+    c2="$(/usr/bin/time -o/tmp/t2 -f'%e %M' ./testMatcher fgl "${dir}/g-${count}")";
+    printf "%4i %7.3f %7i | " "${c2}" $(cat /tmp/t2);
+
+    test "${c1}" -eq "$(wc -l <"${dir}/m-${count}")" || err "mismatch saved matching";
+    test "${c1}" -eq "${c2}" || err "mismatch max flow";
+    printf 'ok\n'
+done | tee -a "${log}";

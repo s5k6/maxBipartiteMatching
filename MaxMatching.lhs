@@ -1,16 +1,19 @@
 
-> module MaxMatching ( maxMatching ) where
+Find a maximum cardinality matching on a bipartite graph [1].  Modelled
+after the Hopcroft–Karp algorithm [2].
+
+Author: Stefan Klinger <http://stefan-klinger.de>
+License: GNU AGPL <http://www.gnu.org/licenses/agpl-3.0.html>
+Date: Fri 2012-Oct-19 16:23:52 CEST
 
 
-Find a maximum cardinality matching on a bipartite graph [1].  Closely
-modelled after the Hopcroft–Karp algorithm [2].
+> module MaxMatching ( matching ) where
 
 
 > import qualified Data.Map as M
 > import qualified Data.Set as S
-> import Control.Monad ( msum )
 
-
+  
 The input graph is of type `Set (α,β)` which implies being bipartite
 and simple.  Unfortunately, it also denies isolated nodes, but they
 cannot be matched anyways.
@@ -33,9 +36,10 @@ have at most one matched edge, it is sufficient to store the matching
 in a map of type `Map β α`, i.e., backwards, with the additional
 invariant of being injective.
 
-> maxMatching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
-> maxMatching g = optimise (targets g) (S.map fst g) M.empty
-
+> matching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
+> matching g = optimise False (M.keys fwd,[]) fwd M.empty
+>     where
+>     fwd = fwdEdges g
 
 Travelling right may offer multiple choices since we can choose any
 unmatched edge.  To this end the graph is maintained as a `M.Map α
@@ -46,53 +50,68 @@ inner α-nodes are removed from this mapping.  This is sufficient,
 since travelling left is always via a matched edge, and thus cannot
 reach the free startnode.
 
-> targets :: (Ord a, Ord b) => S.Set (a,b) -> M.Map a [b]
-> targets = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty . S.toList
+> fwdEdges :: (Ord a, Ord b) => S.Set (a,b) -> M.Map a [b]
+> fwdEdges = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty . S.toList
 
 
-Given the targets of the graph, and a current matching, `findPath tgts
+Given the edges of the graph, and a current matching, `findPath tgts
 mat x` tries to find an augmenting path starting from α-node `x`.
 Note, that it is initially applied on a free α-node `x`, but in the
 recursion it will be used on unfree nodes only, found through the
 backwards mapping of the current matching.
-
-> findPath :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a -> Maybe [(a,b)]
-> findPath tgts mat x = M.lookup x tgts >>= msum . map back
->     where
 
 `back y` looks for a matched edge from β-node `y`.  If there is none,
 then `y` is unmatched, and (x,y) constitutes the last edge of an
 augmenting path.  If there is (z,y), then we recurse trying to find
 an augmenting path from `z`.  If that succeeds, we add (x,y) to it,
 otherwise return Nothing.  For the recursion, `x` is removed from the
-targets (it is already part of the augmenting path), so that above
+edges (it is already part of the augmenting path), so that above
 `M.lookup` fails later on, canceling a loop.
 
->     -- back :: b -> Maybe [(a,b)] -- lookup ‘Scoped Type Variables’
->     back y = fmap ((x,y):)
->              . maybe (Just []) (findPath (M.delete x tgts) mat)
->              $ M.lookup y mat
+> find :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a -> Maybe (M.Map b a)
+> find fwd mat x = fst $ right fwd [] x
+>     where
+>     right rem path x
+>         = maybe (Nothing, rem) (left $ M.delete x rem) $ M.lookup x rem
+>         where
+>         left rem [] = (Nothing, rem)
+>         left rem (y:ys)
+>             = maybe
+>               (Just $ foldr (uncurry $ flip M.insert) mat path', rem)
+>               (uncurry (maybe (flip left ys) ((,) . Just)) . right rem path')
+>               $ M.lookup y mat
+>             where
+>             path' = (x,y):path
 
 
-Given the targets, a set of free α-nodes, and an initial matching,
+> optimise :: (Ord a, Ord b) => Bool -> ([a],[a]) -> M.Map a [b] -> M.Map b a
+>          -> M.Map b a
+> optimise more (x:xs,ys) fwd mat
+>     = maybe (optimise more (xs,x:ys) fwd mat) (optimise True (xs,ys) fwd)
+>       $ find fwd mat x
+> optimise more (_,ys) fwd mat
+>     = if more then optimise False (ys,[]) fwd mat else mat
+
+
+
+                           
+Given the edges, a set of free α-nodes, and an initial matching,
 `optimise tgts free mat` repeatedly improves the matching by finding
 and applying augmenting paths, until no more paths can be found.
 `mat'` is the matching with the augmenting path applied, and `free'`
-is the set of free nodes left after applying the path.
+is the set of free nodes left after applying the path.  It is
+sufficient to remove the startnode `x` of the path from the set of
+free nodes: The final node is β-node and is never considered as a
+startnode, the inner nodes have already been removed.
 
-OPTIMISATION: It would is sufficient to remove the newly added nodes,
-i.e., the first and last node of the path!  The `targets` mapping left
-over from `findPath` minus the startnode might be sufficient?
-
-> optimise :: (Ord a, Ord b) => M.Map a [b] -> S.Set a -> M.Map b a -> M.Map b a
-> optimise tgts free mat
->     = maybe mat recurse . msum . map (findPath tgts mat) $ S.toList free
->     where
->     recurse p = optimise tgts free' mat'
->         where
->         free' = foldl (flip S.delete) free $ map fst p
->         mat' = foldl (flip . uncurry $ flip M.insert) mat p
-
+ > optimise :: (Ord a, Ord b) => M.Map a [b] -> S.Set a -> M.Map b a -> M.Map b a
+ > optimise tgts free mat
+ >     = maybe mat recurse . msum . map findPath' $ S.toList free
+ >     where
+ >     findPath' x = fmap ((,) x) $ findPath tgts mat x
+ >     recurse (x,p) = optimise tgts free' $ augment mat p
+ >         where
+ >         free' = S.delete x free
           
 ____________________
 [1] http://en.wikipedia.org/wiki/Maximum_matching#Maximum_matchings_in_bipartite_graphs
