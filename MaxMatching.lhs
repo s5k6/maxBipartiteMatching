@@ -1,11 +1,14 @@
 
-Find a maximum cardinality matching on a simple bipartite graph [1].
-Modelled after the Hopcroft–Karp algorithm [2].
+Synopsis:
+    Find a maximum cardinality matching on a simple bipartite graph [1].
+    Modelled after the Hopcroft–Karp algorithm [2].
 
-Author: Stefan Klinger <http://stefan-klinger.de>
+Author:
+    Stefan Klinger <http://stefan-klinger.de>
 
-License: GNU Affero General Public License, Version 3
-         <http://www.gnu.org/licenses/agpl-3.0.html>
+License:
+    GNU Affero General Public License, Version 3
+    <http://www.gnu.org/licenses/agpl-3.0.html>
 
 Date: Fri 2012-Oct-19 16:23:52 CEST
 
@@ -15,7 +18,7 @@ Date: Fri 2012-Oct-19 16:23:52 CEST
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 
-  
+    
 The input graph is of type `Set (α,β)` which implies being bipartite and
 simple.  Unfortunately, it also denies isolated nodes, but they cannot
 be matched anyways.
@@ -53,7 +56,7 @@ proper matching, i.e., being injective.
 
       
 Travelling right may offer multiple choices since we can choose any
-unmatched edge.  To this end the graph is maintained as a `M.Map α [β]`,
+unmatched edge.  To this end the graph is maintained as a `Map α [β]`,
 listing all β-nodes reachable from an α-node.
 
 > fwdEdges :: (Ord a, Ord b) => S.Set (a,b) -> M.Map a [b]
@@ -68,7 +71,7 @@ of free nodes, …
 
 … `optimise` repeatedly calls `find` on each free α-node `x`, i.e., runs
 a path search from `x`, hoping to get Just a better matching back.  In
-that case, `x` is removed from the zipper, otherwise it is kept for
+that case, `x` is removed from the zipper, otherwise it is set aside for
 later iterations.
 
 > optimise more (x:xs,ys) fwd mat
@@ -85,24 +88,25 @@ possible.
 
 
 Now the core of the implementation is `find`.  With the forward edges
-and a start node `x`, it tries to improve a given matching by looking
-for an augmenting path starting from `x`, which is free.  This is done
-by a depth first search, alternately travelling `right` and `left.
+and a free start node `x`, it tries to improve a given matching by
+looking for an augmenting path starting here.  This is done by a depth
+first search, alternately travelling `right` and `left.
 
 > find :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a -> Maybe (M.Map b a)
-> find fwd mat x = fst $ right fwd [] x
+> find fwd mat x = either (const Nothing) Just $ right fwd [] x
 >     where
 
 The performance boost comes from removing all visited α-nodes `x` from
 the forward mapping, and carrying this information through the
-backtracking.  Hence, `right` returns Maybe a better matching, and
-always the `rem`aining forward mapping.  Here we bail out if `x` is not
-in the forward mapping any more, avoiding cycles, and nodes that cannot
-lead to an augmenting path currently.  Note, that `find` is always
-called with the complete forward mapping by `optimise`.
+backtracking.  Hence, `right` returns Right a better matching, or Left
+the `rem`aining forward mapping — unfortunately, the Either constructors
+are called Left and Right.  Here we bail out if `x` is not in the
+forward mapping any more, avoiding cycles and nodes that cannot lead to
+an augmenting path currently.  Note, that `find` is always called with
+the complete original forward mapping by `optimise`.
 
 >     right rem path x
->         = maybe (Nothing, rem) (left $ M.delete x rem) $ M.lookup x rem
+>         = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
 >         where
 
 The remaining forward mapping `rem` yields a list of β-nodes that can be
@@ -110,13 +114,13 @@ reached from `x`.  If that list runs empty, then there is no augmenting
 path via `x`, and also not via any of the nodes we have tried below, so
 we return a hopefully much smaller forward mapping `rem`.
 
->         left rem [] = (Nothing, rem)
+>         left rem [] = Left rem
 
 For the first reacheble β-node `y`, we check wheter it is free, i.e.,
 not in the matching `mat`.  If so, the `path'`, made up of the currently
 last edge (x,y) and what we have seen on the DFS so far, is used to
 augment the matching.  We need to augment anyways, so we can do this
-here and return a matching, instead of returning a path and augment
+here and return a matching instead of returning a path and augment
 later.  Also, we don't collect multiple paths before augmentation,
 because that would require to protect the still-free β-node `y` from
 being used in another augmenting path.  However, if `y` is not free, we
@@ -125,8 +129,8 @@ that fails, we try one of the remaining `ys`, recursing `left`.
 
 >         left rem (y:ys)
 >             = maybe
->               (Just $ foldr (uncurry $ flip M.insert) mat path', rem)
->               (uncurry (maybe (flip left ys) ((,) . Just)) . right rem path')
+>               (Right $ foldr (uncurry $ flip M.insert) mat path')
+>               (either (flip left ys) Right . right rem path')
 >               $ M.lookup y mat
 >             where
 >             path' = (x,y):path
