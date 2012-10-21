@@ -1,7 +1,9 @@
 #!/usr/bin/gnuplot
 
-dir = 'log-10-100-3'
-#dir = 'log-100-400-3'
+#dir = 'log-10-100-3';
+dir = 'log-100-400-10';
+#dir = 'log-400-1000-10';
+
 
 t = "wxt"
 #t = "png"
@@ -29,7 +31,7 @@ set output sprintf("%s/time_edges.%s", dir, t)
 
 plot file using ec:t2 title "fgl", file using ec:t1 title "mine"
 
-if (t eq "wxt") pause -1  "Hit return to continue"
+if (t eq "wxt") pause mouse close "Close window to continue\n"
 
 
 
@@ -38,7 +40,7 @@ set output sprintf("%s/time_nodes.%s", dir, t)
 
 plot file using (column(lnc) + column(rnc)):t2 title "fgl", file using (column(lnc) + column(rnc)):t1 title "mine"
 
-if (t eq "wxt") pause -1  "Hit return to continue"
+if (t eq "wxt") pause mouse close "Close window to continue\n"
 
 
 
@@ -47,7 +49,7 @@ set output sprintf("%s/time_matches.%s", dir, t)
 
 plot file using mc:t2 title "fgl", file using mc:t1 title "mine"
 
-if (t eq "wxt") pause -1  "Hit return to continue"
+if (t eq "wxt") pause mouse close "Close window to continue\n"
 
 
 
@@ -56,7 +58,7 @@ set output sprintf("%s/mem_edges.%s", dir, t)
 
 plot file using ec:m2 title "fgl", file using ec:m1 title "mine"
 
-if (t eq "wxt") pause -1  "Hit return to continue"
+if (t eq "wxt") pause mouse close "Close window to continue\n"
 
 
 
@@ -65,7 +67,7 @@ set output sprintf("%s/mem_nodes.%s", dir, t)
 
 plot file using (column(lnc) + column(rnc)):m2 title "fgl", file using (column(lnc) + column(rnc)):m1 title "mine"
 
-if (t eq "wxt") pause -1  "Hit return to continue"
+if (t eq "wxt") pause mouse close "Close window to continue\n"
 
 
 

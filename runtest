@@ -2,10 +2,7 @@
 set -u -e -C;
 shopt -s nullglob;
 
-function err {
-    echo "$@" >&2;
-    for i in $(seq 100); do printf '\a'; sleep 0.3; done; exit 1;
-}
+function err { echo "$@" >&2; }
 function warn { echo "$@" >&2; }
 
 function ask_yN {
@@ -41,15 +38,27 @@ EOF
 
 until read -t0.01 -n1 -s; do
     count="$((count + 1))";
+    test "$count" -gt 5000 && exit 0;
+    
     printf "%4i %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${nl}" "${nu}" "${db}" "${dir}/g-${count}");
 
-    c1="$(/usr/bin/time -o/tmp/t1 -f'%e %M' ./testMatcher mine "${dir}/g-${count}" "${dir}/m-${count}")";
-    printf "%4i %7.3f %7i | " "${c1}" $(cat /tmp/t1);
+    if /usr/bin/time -o"${dir}/t1" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher mine "${dir}/g-${count}" "${dir}/m-${count}" >| "${dir}/c1"; then
+        c1="$(<"${dir}/c1")";
+        printf "%4i %7.3f %7i | " "${c1}" $(<"${dir}/t1");
+        test "${c1}" -eq "$(wc -l <"${dir}/m-${count}")" || err "mismatch saved matching";
+    else
+        printf "%4i %7.3f %7i | %7.3f %7i | dnf\n" -1 -1 -1 -1 -1;
+        continue;
+    fi;
 
-    c2="$(/usr/bin/time -o/tmp/t2 -f'%e %M' ./testMatcher fgl "${dir}/g-${count}")";
-    printf "%7.3f %7i | " $(cat /tmp/t2);
-
-    test "${c1}" -eq "$(wc -l <"${dir}/m-${count}")" || err "mismatch saved matching";
-    test "${c1}" -eq "${c2}" || err "mismatch max flow";
-    printf 'ok\n'
-done | tee -a "${log}";
+    if /usr/bin/time -o"${dir}/t2" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher fgl "${dir}/g-${count}" >| "${dir}/c2"; then
+        c2="$(<"${dir}/c2")";
+        printf "%7.3f %7i | " $(<"${dir}/t2");
+        test "${c1}" -eq "${c2}" || err "mismatch max flow";
+    else
+        printf "%7.3f %7i | dnf\n" -1 -1;
+        continue;
+    fi;
+    printf "ok\n";
+    
+done 2>&1 | tee -a "${log}";

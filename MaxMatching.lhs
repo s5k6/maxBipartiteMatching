@@ -1,27 +1,23 @@
-
-Synopsis:
-    Find a maximum cardinality matching on a simple bipartite graph [1].
-    Modelled after the Hopcroft–Karp algorithm [2].
-
-Author:
-    Stefan Klinger <http://stefan-klinger.de>
-
-License:
-    GNU Affero General Public License, Version 3
-    <http://www.gnu.org/licenses/agpl-3.0.html>
-
-Date: Fri 2012-Oct-19 16:23:52 CEST
-
-
 > module MaxMatching ( matching ) where
+
+This module finds a maximum cardinality matching on a simple bipartite
+graph [1]. Modelled after the Hopcroft–Karp algorithm [2], but less
+efficient.
+
+Author: Stefan Klinger <http://stefan-klinger.de>
+
+License: GNU Affero General Public License, Version 3
+         <http://www.gnu.org/licenses/agpl-3.0.html>
+
+Date: Fri 2012-Oct-19
+
 
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 
-    
-The input graph is of type `Set (α,β)` which implies being bipartite and
-simple.  Unfortunately, it also denies isolated nodes, but they cannot
-be matched anyways.
+
+Basics
+------
 
 A “matching” is a subset of the edges, so that each node is incident to
 at most one edge that is in the matching.  We are looking for a matching
@@ -41,6 +37,13 @@ its matched edges become unmatched, and vice versa, thus incrementing
 the matching's size by one.
 
 
+Implementation
+--------------
+
+The input graph is of type `Set (α,β)` which implies being bipartite and
+simple.  It also denies isolated nodes, but they cannot be matched
+anyways.
+
 When looking for an augmenting path, travelling “right” to a β-node, is
 always via an unmatched edge, and travelling “left” to an α-node is
 always via a matched edge.  Exactly the first and last node of an
@@ -50,92 +53,93 @@ a map of type `Map β α`, i.e., backwards.  The invariant is being a
 proper matching, i.e., being injective.
 
 > matching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
-> matching g = optimise (M.keys fwd,[]) fwd M.empty
+> matching g = opt (M.keys fwd, []) fwd M.empty
 >     where
->     fwd = fwdEdges g
 
-      
-Travelling right may offer multiple choices since we can choose any
-unmatched edge.  To this end the graph is maintained as a `Map α [β]`,
-listing all β-nodes reachable from an α-node.
+      Travelling right, we can choose any unmatched edge.  To this end,
+      the entire graph is maintained as a `Map α [β]`, listing all
+      β-nodes reachable from an α-node.
 
-> fwdEdges :: (Ord a, Ord b) => S.Set (a,b) -> M.Map a [b]
-> fwdEdges = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty . S.toList
+>     fwd = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty $ S.toList g
 
 
-Given the forward edges, an (initially empty) matching, and a zipper [3]
-of free nodes, …
+Given two lists of free and failed nodes, the forward edges, and an
+(initially empty) matching, the optimizer function…
 
-> optimise :: (Ord a, Ord b) => ([a],[a]) -> M.Map a [b] -> M.Map b a
->          -> M.Map b a
+> opt :: (Ord a, Ord b) => ([a],[a]) -> M.Map a [b] -> M.Map b a -> M.Map b a
 
-… `optimise` repeatedly calls `find` on each free α-node `x`, i.e., runs
-a path search from `x`, hoping to get Just a better matching back.  In
-that case, `x` is removed from the zipper, otherwise it is set aside for
-later iterations.
+…repeatedly calls `right` on each free α-node, i.e., starts a path
+search from `x`, hoping to get a better matching back.
 
-> optimise (x:xs,ys) fwd mat
->     = either (flip (optimise (xs,x:ys)) mat) (optimise (xs++ys,[]) fwd)
+If no better matching is found, then `x` is is set aside as a failed
+node for reconsideration in later iterations.  Otherwise, `x` is part of
+the matching an removed from the list of free nodes.  Also, the failed
+nodes set aside previously are appended to the free nodes, since they
+may lead to an augmenting path with the new matching.
+
+> opt (x:free,failed) fwd mat
+>     = either (flip (opt (free,x:failed)) mat) (opt (free++failed,[]) fwd)
 >       $ right fwd [] x
 >     where
+
+      `right` returns Either Right a better matching if an augmenting
+      path starting at `x` was found, or Left a reduced forward mapping
+      otherwise.  The rationale is, that if no augmenting path was
+      found, then all α-nodes traversed on the quest can be omitted from
+      further searches until the matching is modified: They all lead to
+      blind ends.
+
+      Note, that `opt` always applies `right` to a free node, and
+      the complete original forward mapping, while `left` always applies
+      `right` to a non-free node and a reduced forward mapping, plus an
+      accummulated `path`.
+
+      The remaining forward mapping `rem` yields a list of β-nodes that
+      can be reached from `x`.  We try to walk left from these, without
+      ever going back to `x`, which is why it's deleted from `rem`.
+
 >     right rem path x
 >         = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
 >         where
 >         left rem [] = Left rem
 >         left rem (y:ys)
->             = maybe
+>             = (\ e n j -> maybe n j e) -- for better readability
+
+                For the first reacheble β-node `y`, we check wheter it
+                is free, i.e., not in the matching `mat`.
+
+>               (M.lookup y mat)
+
+                If so, then `path'` is used to augment the matching.  We
+                need to augment anyways, so we can do this here and
+                return a new matching instead of returning a path and
+                augment later.  Also, we don't collect multiple paths
+                before augmentation, because that would require to
+                protect the still-free β-node `y` from being used in
+                another augmenting path.  Enjoy this:
+
 >               (Right $ foldr (uncurry $ flip M.insert) mat path')
+
+                However, if `y` is not free, we try to continue where
+                the matched edge leads to, descending `right`.  If that
+                fails, we try one of the remaining `ys`, recursing
+                `left`.
+
 >               (either (flip left ys) Right . right rem path')
->               $ M.lookup y mat
+
 >             where
+
+              The new path is made up of the currently last edge (x,y)
+              and what we have seen on the DFS so far,
+
 >             path' = (x,y):path
 
-When no `more` improvements are found for any free node, the current
-matching is returned.  Otherwise, we retry all remaining free nodes
-`ys`, since the refined matching might make new augmenting paths
-possible.
+Finally, when no more improvements are found for any potential left
+node, i.e., all free α-nodes failed, then the current matching is
+returned.
 
-> optimise ([],ys) fwd mat = mat
-
-
-Now the core of the implementation is `find`.  With the forward edges
-and a free start node `x`, it tries to improve a given matching by
-looking for an augmenting path starting here.  This is done by a depth
-first search, alternately travelling `right` and `left.
-
-
-The performance boost comes from removing all visited α-nodes `x` from
-the forward mapping, and carrying this information through the
-backtracking.  Hence, `right` returns Right a better matching, or Left
-the `rem`aining forward mapping — unfortunately, the Either constructors
-are called Left and Right.  Here we bail out if `x` is not in the
-forward mapping any more, avoiding cycles and nodes that cannot lead to
-an augmenting path currently.  Note, that `find` is always called with
-the complete original forward mapping by `optimise`.
-
-
-The remaining forward mapping `rem` yields a list of β-nodes that can be
-reached from `x`.  If that list runs empty, then there is no augmenting
-path via `x`, and also not via any of the nodes we have tried below, so
-we return a hopefully much smaller forward mapping `rem`.
-
-
-For the first reacheble β-node `y`, we check wheter it is free, i.e.,
-not in the matching `mat`.  If so, the `path'`, made up of the currently
-last edge (x,y) and what we have seen on the DFS so far, is used to
-augment the matching.  We need to augment anyways, so we can do this
-here and return a matching instead of returning a path and augment
-later.  Also, we don't collect multiple paths before augmentation,
-because that would require to protect the still-free β-node `y` from
-being used in another augmenting path.  However, if `y` is not free, we
-try to continue where the matched edge leads to, descending `right`.  If
-that fails, we try one of the remaining `ys`, recursing `left`.
-
-
-Enjoy the augmenting step: For each edge (u,v) in the `path'`, it
-adjusts the backward mapping of `v` to `u` by a simple `M.insert`.
+> opt ([],failed) fwd mat = mat
 
 ____________________
 [1] https://en.wikipedia.org/wiki/Maximum_matching#Maximum_matchings_in_bipartite_graphs
 [2] https://en.wikipedia.org/wiki/Hopcroft-Karp_algorithm
-[3] https://en.wikipedia.org/wiki/Zipper_(data_structure)#Example:_Bidirectional_list_traversal
