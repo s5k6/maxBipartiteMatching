@@ -2,7 +2,8 @@
 
 #dir = 'log-100-10'
 #dir = 'log-100-4'
-dir = 'log-400-4'
+#dir = 'log-400-4'
+dir = 'log-2000-10'
 
 t = "wxt"
 #t = "png"

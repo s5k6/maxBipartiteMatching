@@ -50,7 +50,7 @@ a map of type `Map β α`, i.e., backwards.  The invariant is being a
 proper matching, i.e., being injective.
 
 > matching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
-> matching g = optimise False (M.keys fwd,[]) fwd M.empty
+> matching g = optimise (M.keys fwd,[]) fwd M.empty
 >     where
 >     fwd = fwdEdges g
 
@@ -66,7 +66,7 @@ listing all β-nodes reachable from an α-node.
 Given the forward edges, an (initially empty) matching, and a zipper [3]
 of free nodes, …
 
-> optimise :: (Ord a, Ord b) => Bool -> ([a],[a]) -> M.Map a [b] -> M.Map b a
+> optimise :: (Ord a, Ord b) => ([a],[a]) -> M.Map a [b] -> M.Map b a
 >          -> M.Map b a
 
 … `optimise` repeatedly calls `find` on each free α-node `x`, i.e., runs
@@ -74,8 +74,8 @@ a path search from `x`, hoping to get Just a better matching back.  In
 that case, `x` is removed from the zipper, otherwise it is set aside for
 later iterations.
 
-> optimise more (x:xs,ys) fwd mat
->     = maybe (optimise more (xs,x:ys) fwd mat) (optimise True (xs,ys) fwd)
+> optimise (x:xs,ys) fwd mat
+>     = either (flip (optimise (xs,x:ys)) mat) (optimise (xs++ys,[]) fwd)
 >       $ find fwd mat x
 
 When no `more` improvements are found for any free node, the current
@@ -83,8 +83,7 @@ matching is returned.  Otherwise, we retry all remaining free nodes
 `ys`, since the refined matching might make new augmenting paths
 possible.
 
-> optimise more ([],ys) fwd mat
->     = if more then optimise False (ys,[]) fwd mat else mat
+> optimise ([],ys) fwd mat = mat
 
 
 Now the core of the implementation is `find`.  With the forward edges
@@ -92,8 +91,9 @@ and a free start node `x`, it tries to improve a given matching by
 looking for an augmenting path starting here.  This is done by a depth
 first search, alternately travelling `right` and `left.
 
-> find :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a -> Maybe (M.Map b a)
-> find fwd mat x = either (const Nothing) Just $ right fwd [] x
+> find :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a
+>      -> Either (M.Map a [b]) (M.Map b a)
+> find fwd mat x = right fwd [] x
 >     where
 
 The performance boost comes from removing all visited α-nodes `x` from
