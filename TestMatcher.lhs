@@ -11,9 +11,9 @@
 > import System.Environment ( getArgs, getEnv )
 > import System.Random
 
-> assert e c = if c then return () else fail e
+> assert e c = if c then return () else fail $ "assert "++e
 > swap (a,b) = (b,a)
-
+> 
 
 > parse :: String -> S.Set (Int,Int)
 > parse = S.fromList . p . lines
@@ -40,13 +40,13 @@
 
 > ren x y = (2*x+1,2*y)
         
-> mkGraph :: Int -> Int -> String -> IO ()
-> mkGraph maxn w out
->     = do n <- randomRIO (2,max 2 $ maxn-1)
->          f <- randomRIO (10, w*10)
->          let l = div (n*f) (f+10)
+> mkGraph :: Int -> Int -> Int -> String -> IO ()
+> mkGraph nl nu db out
+>     = do n <- randomRIO (nl, nu)
+>          assert "split factor" $ db>0
+>          q <- randomRIO (n, n*db)
+>          let l = div q (db+1)
 >              r = n - l
->                  
 >          -- connect at least every node once
 >          ys0 <- replicateM l $ randomRIO (0,r-1)
 >          let ys1 = [y | y <- [0..r-1], not $ elem y ys0]
@@ -60,9 +60,9 @@
 >          writeFile out . fmt $ S.toList g
 >          let (es,ec,ls,rs,lc,rc) = stat g
 >                                    
+>          putStrLn $ unwords [show lc, show rc, show ec]
 >          assert "left count" $ lc == l
 >          assert "right count" $ rc == r
->          putStrLn $ unwords [show lc, show rc, show ec]
            
 > fglMatcher ::S.Set (Int,Int) -> IO ()
 > fglMatcher g
@@ -97,6 +97,17 @@
 >     = do as <- getArgs
 >          case as of
 >            ["fgl",gf] -> fglMatcher =<< parse <$> readFile gf
+>                          
 >            ["mine",gf] -> mine "/dev/null" =<< parse <$> readFile gf
 >            ["mine",gf,mf] -> mine mf =<< parse <$> readFile gf
->            ["mkgraph",l,r,gf] -> mkGraph (read l) (read r) gf
+>                             
+>            ["mkgraph",nl,nu,db,gf] -> mkGraph (read nl) (read nu) (read db) gf
+>
+>            _ -> putStrLn help
+
+> help =
+>     "usage : testMatcher <command>\n\
+>     \command : fgl <in>\n\
+>     \        | mine <in> <out>?\n\
+>     \        | mkgraph <min nodes> <max nodes> <min balance> <out>\n\
+>     \use with ‘time  -f '%e %M'’\n"

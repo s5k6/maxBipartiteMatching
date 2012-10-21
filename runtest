@@ -19,30 +19,35 @@ function ask_yN {
     return 1;
 }
 
-n="${1:?missing arg1: max number of nodes}";
-w="${2:?missing arg2: max unbalance ratio}";
+nl="${1:?missing arg1: min number of nodes}";
+nu="${2:?missing arg2: max number of nodes}";
+db="${3:?missing arg3: min balance}";
 
 make testMatcher;
-dir="log-${n}-${w}";
+dir="log-${nl}-${nu}-${db}";
 mkdir -p "${dir}";
 log="${dir}/log";
 
 if test -r "${log}"; then
     count="$(wc -l <"${log}")";
 else
-    echo '# <no> <lnc> <rnc> <ec> | <mc> <t> <rss> | <mc> <t> <rss>' | tee -a "${log}";
     count=0;
 fi;
 
+cat <<EOF | tee -a "${log}";
+# Graph               | Mine                 | FGL             |
+# no  lnc  rnc     ec |   mc       t     rss |       t     rss | ok
+EOF
+
 until read -t0.01 -n1 -s; do
     count="$((count + 1))";
-    printf "%4i | %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${n}" "${w}" "${dir}/g-${count}");
+    printf "%4i %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${nl}" "${nu}" "${db}" "${dir}/g-${count}");
 
     c1="$(/usr/bin/time -o/tmp/t1 -f'%e %M' ./testMatcher mine "${dir}/g-${count}" "${dir}/m-${count}")";
     printf "%4i %7.3f %7i | " "${c1}" $(cat /tmp/t1);
 
     c2="$(/usr/bin/time -o/tmp/t2 -f'%e %M' ./testMatcher fgl "${dir}/g-${count}")";
-    printf "%4i %7.3f %7i | " "${c2}" $(cat /tmp/t2);
+    printf "%7.3f %7i | " $(cat /tmp/t2);
 
     test "${c1}" -eq "$(wc -l <"${dir}/m-${count}")" || err "mismatch saved matching";
     test "${c1}" -eq "${c2}" || err "mismatch max flow";

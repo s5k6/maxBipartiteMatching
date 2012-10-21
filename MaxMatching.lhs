@@ -76,7 +76,19 @@ later iterations.
 
 > optimise (x:xs,ys) fwd mat
 >     = either (flip (optimise (xs,x:ys)) mat) (optimise (xs++ys,[]) fwd)
->       $ find fwd mat x
+>       $ right fwd [] x
+>     where
+>     right rem path x
+>         = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
+>         where
+>         left rem [] = Left rem
+>         left rem (y:ys)
+>             = maybe
+>               (Right $ foldr (uncurry $ flip M.insert) mat path')
+>               (either (flip left ys) Right . right rem path')
+>               $ M.lookup y mat
+>             where
+>             path' = (x,y):path
 
 When no `more` improvements are found for any free node, the current
 matching is returned.  Otherwise, we retry all remaining free nodes
@@ -91,10 +103,6 @@ and a free start node `x`, it tries to improve a given matching by
 looking for an augmenting path starting here.  This is done by a depth
 first search, alternately travelling `right` and `left.
 
-> find :: (Ord a, Ord b) => M.Map a [b] -> M.Map b a -> a
->      -> Either (M.Map a [b]) (M.Map b a)
-> find fwd mat x = right fwd [] x
->     where
 
 The performance boost comes from removing all visited α-nodes `x` from
 the forward mapping, and carrying this information through the
@@ -105,16 +113,12 @@ forward mapping any more, avoiding cycles and nodes that cannot lead to
 an augmenting path currently.  Note, that `find` is always called with
 the complete original forward mapping by `optimise`.
 
->     right rem path x
->         = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
->         where
 
 The remaining forward mapping `rem` yields a list of β-nodes that can be
 reached from `x`.  If that list runs empty, then there is no augmenting
 path via `x`, and also not via any of the nodes we have tried below, so
 we return a hopefully much smaller forward mapping `rem`.
 
->         left rem [] = Left rem
 
 For the first reacheble β-node `y`, we check wheter it is free, i.e.,
 not in the matching `mat`.  If so, the `path'`, made up of the currently
@@ -127,13 +131,6 @@ being used in another augmenting path.  However, if `y` is not free, we
 try to continue where the matched edge leads to, descending `right`.  If
 that fails, we try one of the remaining `ys`, recursing `left`.
 
->         left rem (y:ys)
->             = maybe
->               (Right $ foldr (uncurry $ flip M.insert) mat path')
->               (either (flip left ys) Right . right rem path')
->               $ M.lookup y mat
->             where
->             path' = (x,y):path
 
 Enjoy the augmenting step: For each edge (u,v) in the `path'`, it
 adjusts the backward mapping of `v` to `u` by a simple `M.insert`.

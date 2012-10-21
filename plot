@@ -1,30 +1,33 @@
 #!/usr/bin/gnuplot
 
-#dir = 'log-100-10'
-#dir = 'log-100-4'
-#dir = 'log-400-4'
-dir = 'log-2000-10'
+dir = 'log-10-100-3'
+#dir = 'log-100-400-3'
 
 t = "wxt"
 #t = "png"
 #t = "pdf"
 
-file = sprintf('%s/log', dir)
-
-# <no> | <lnc> <rnc> <ec> | <mc> <t> <rss> | <mc> <t> <rss> | ok
-#   1      3     4    5      7    8    9      11  12   13
-
 set key top left box opaque
 
 set terminal t
-if (t eq "png") set terminal t size 1024,768
+if (t eq "png") set terminal t size 1200,900
+
+
+
+file = sprintf('%s/log', dir)
+
+# Graph               | Mine                 | FGL             |
+# no  lnc  rnc     ec |   mc       t     rss |       t     rss | ok
+#  1    2    3      4 5    6       7     8   9      10      11 12 13
+
+lnc=2; rnc=3; ec=4; mc=6;   t1=7; m1=8;  t2=10; m2=11;
 
 
 
 set title "time[s]/edges"
 set output sprintf("%s/time_edges.%s", dir, t)
 
-plot file using 5:12 title "fgl", file using 5:8 title "mine"
+plot file using ec:t2 title "fgl", file using ec:t1 title "mine"
 
 if (t eq "wxt") pause -1  "Hit return to continue"
 
@@ -33,7 +36,7 @@ if (t eq "wxt") pause -1  "Hit return to continue"
 set title "time[s]/nodes"
 set output sprintf("%s/time_nodes.%s", dir, t)
 
-plot file using ($3 + $4):12 title "fgl", file using ($3 + $4):8 title "mine"
+plot file using (column(lnc) + column(rnc)):t2 title "fgl", file using (column(lnc) + column(rnc)):t1 title "mine"
 
 if (t eq "wxt") pause -1  "Hit return to continue"
 
@@ -42,7 +45,7 @@ if (t eq "wxt") pause -1  "Hit return to continue"
 set title "time[s]/matches"
 set output sprintf("%s/time_matches.%s", dir, t)
 
-plot file using 11:12 title "fgl", file using 7:8 title "mine"
+plot file using mc:t2 title "fgl", file using mc:t1 title "mine"
 
 if (t eq "wxt") pause -1  "Hit return to continue"
 
@@ -51,7 +54,7 @@ if (t eq "wxt") pause -1  "Hit return to continue"
 set title "max RSS[kB]/edges"
 set output sprintf("%s/mem_edges.%s", dir, t)
 
-plot file using 5:13 title "fgl", file using 5:9 title "mine"
+plot file using ec:m2 title "fgl", file using ec:m1 title "mine"
 
 if (t eq "wxt") pause -1  "Hit return to continue"
 
@@ -60,7 +63,7 @@ if (t eq "wxt") pause -1  "Hit return to continue"
 set title "max RSS[kB]/nodes"
 set output sprintf("%s/mem_nodes.%s", dir, t)
 
-plot file using ($3 + $4):13 title "fgl", file using ($3 + $4):9 title "mine"
+plot file using (column(lnc) + column(rnc)):m2 title "fgl", file using (column(lnc) + column(rnc)):m1 title "mine"
 
 if (t eq "wxt") pause -1  "Hit return to continue"
 
@@ -69,5 +72,6 @@ if (t eq "wxt") pause -1  "Hit return to continue"
 set title "max RSS[kB]/matches"
 set output sprintf("%s/mem_matches.%s", dir, t)
 
-plot file using 11:13 title "fgl", file using 7:9 title "mine"
+plot file using mc:m2 title "fgl", file using mc:m1 title "mine"
+
 
