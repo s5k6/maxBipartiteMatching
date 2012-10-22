@@ -22,7 +22,9 @@ db="${3:?missing arg3: min balance}";
 
 make testMatcher;
 dir="log-${nl}-${nu}-${db}";
-mkdir -p "${dir}";
+mkdir -p "${dir}/g";
+mkdir -p "${dir}/m";
+mkdir -p "${dir}/t";
 log="${dir}/log";
 
 if test -r "${log}"; then
@@ -40,25 +42,28 @@ until read -t0.01 -n1 -s; do
     count="$((count + 1))";
     test "$count" -gt 5000 && exit 0;
     
-    printf "%4i %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${nl}" "${nu}" "${db}" "${dir}/g-${count}");
+    printf "%4i %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${nl}" "${nu}" "${db}" "${dir}/g/${count}");
 
-    if /usr/bin/time -o"${dir}/t1" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher mine "${dir}/g-${count}" "${dir}/m-${count}" >| "${dir}/c1"; then
-        c1="$(<"${dir}/c1")";
-        printf "%4i %7.3f %7i | " "${c1}" $(<"${dir}/t1");
-        test "${c1}" -eq "$(wc -l <"${dir}/m-${count}")" || err "mismatch saved matching";
+    if /usr/bin/time -o"${dir}/t/t1" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher mine "${dir}/g/${count}" "${dir}/m/${count}" >| "${dir}/t/c1"; then
+        c1="$(<"${dir}/t/c1")";
+        printf "%4i %7.3f %7i | " "${c1}" $(<"${dir}/t/t1");
+        test "${c1}" -eq "$(wc -l <"${dir}/m/${count}")" || err "mismatch saved matching";
     else
         printf "%4i %7.3f %7i | %7.3f %7i | dnf\n" -1 -1 -1 -1 -1;
         continue;
     fi;
 
-    if /usr/bin/time -o"${dir}/t2" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher fgl "${dir}/g-${count}" >| "${dir}/c2"; then
-        c2="$(<"${dir}/c2")";
-        printf "%7.3f %7i | " $(<"${dir}/t2");
-        test "${c1}" -eq "${c2}" || err "mismatch max flow";
-    else
-        printf "%7.3f %7i | dnf\n" -1 -1;
-        continue;
+    if test "$nu" -lt 500; then
+        if /usr/bin/time -o"${dir}/t/t2" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher fgl "${dir}/g/${count}" >| "${dir}/t/c2"; then
+            c2="$(<"${dir}/t/c2")";
+            printf "%7.3f %7i | " $(<"${dir}/t/t2");
+            test "${c1}" -eq "${c2}" || err "mismatch max flow";
+        else
+            printf "%7.3f %7i | dnf\n" -1 -1;
+            continue;
+        fi;
     fi;
+    
     printf "ok\n";
     
 done 2>&1 | tee -a "${log}";

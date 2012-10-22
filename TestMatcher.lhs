@@ -10,7 +10,8 @@
 > import qualified Data.Graph.Inductive.Query.MaxFlow as G
 > import System.Environment ( getArgs, getEnv )
 > import System.Random
-
+> import Data.Array.IO
+       
 > assert e c = if c then return () else fail $ "assert "++e
 > swap (a,b) = (b,a)
 > 
@@ -38,11 +39,28 @@
 >           rc = S.size rs
 >       in (es,ec,ls,rs,lc,rc)
 
-> ren x y = (2*x+1,2*y)
+
+Modified `shuffle` function, taken from the Haskell Wiki:
+http://www.haskell.org/haskellwiki/Random_shuffle
         
+> shuffle :: Int -> [a] -> IO [a]
+> shuffle k xs
+>     = do ar <- newArray n xs
+>          forM [1..k] $ \i -> do
+>            j <- randomRIO (i,n)
+>            vi <- readArray ar i
+>            vj <- readArray ar j
+>            writeArray ar j vi
+>            return vj
+>     where
+>     n = length xs
+>     newArray :: Int -> [a] -> IO (IOArray Int a)
+>     newArray n xs = newListArray (1,n) xs
+
+                
 > mkGraph :: Int -> Int -> Int -> String -> IO ()
 > mkGraph nl nu db out
->     = do n <- randomRIO (nl, nu)
+>     = do n <- max 2 <$> randomRIO (nl, nu)
 >          assert "split factor" $ db>0
 >          q <- randomRIO (n, n*db)
 >          let l = div q (db+1)
@@ -52,9 +70,9 @@
 >          let ys1 = [y | y <- [0..r-1], not $ elem y ys0]
 >          xs1 <- replicateM (length ys1) $ randomRIO (0,l-1)
 >          let es0 = zip [0..l-1] ys0 ++ zip xs1 ys1
->          -- maybe add more ed
+>          -- maybe add more edges
 >          k <- randomRIO (0, l*r - length es0)
->          es1 <- replicateM k ((,) <$> (randomRIO (0,l-1)) <*> (randomRIO (0,r-1)))
+>          es1 <- shuffle k [(x,y) | x <- [0..l-1], y <- [0..r-1]]
 >          let g = S.fromList . map (\(x,y) -> (2*x+1,2*y)) $ es0++es1
 >
 >          writeFile out . fmt $ S.toList g
