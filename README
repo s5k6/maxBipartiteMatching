@@ -1,0 +1,30 @@
+Hello.
+
+I have written a function that calculates maximum cardinality matchings
+on bipartite graphs.  It's quite short.
+
+It seems (tested, not proven) to run faster, use less memory, and scale
+better than using MaxFlow from FGL with constant weight and additional
+source and sink nodes.  But it's not as good as Hopcroft–Karp would be.
+
+Just as an exmaple, run
+
+    ghci Data/Graph/MaxBipartiteMatching.lhs
+
+and then use
+
+    matching $ S.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
+
+to calculate a maximum cardinality matching of the graph shown below.
+
+    1---a       Note the somewhat awkward type of the matching
+     \ /        function, returning a Map instead of a Set, with the
+      X         edges being backwards!
+     / \
+    2   b       matching :: (Ord b, Ord a) => S.Set (a, b) -> M.Map b a
+     \ /        
+      X         On my machine, it takes less than 2s on 10k edges
+     / \        or 225 nodes.
+    3   c
+
+Comments are welcome!
