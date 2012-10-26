@@ -16,6 +16,7 @@ augmenting path algorithm.
 
 > import qualified Data.Map as M
 > import qualified Data.Set as S
+> import Data.List ( foldl' )
 
 
 Basics
@@ -65,7 +66,8 @@ Travelling right, we can choose any unmatched edge.  To this end, the
 entire graph is maintained as a “forward mapping” of type `Map α [β]`,
 listing all β-nodes adjacent to an α-node.
 
->     fwd = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty $ S.toList g
+>     fwd = foldl' (\m (x,y) -> M.insertWith (++) x [y] m) M.empty $ S.toList g
+>    -- fwd = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty $ S.toList g
 
 
 Given two lists of (initially all) free and (initially no) failed
@@ -77,9 +79,9 @@ optimizer function…
 …repeatedly calls `right` on each free α-node, i.e., starts a path
 search from `x`, hoping to get a better matching back.
 
-If no better matching is found, then `x` is is set aside as a failed
-node for reconsideration in later iterations.  Otherwise, `x` is part of
-the matching and removed from the list of free nodes.  Also, the failed
+If no better matching is found, then `x` is set aside as a failed node
+for reconsideration in later iterations.  Otherwise, `x` is part of the
+matching and removed from the list of free nodes.  Also, the failed
 nodes set aside previously are appended to the free nodes, since they
 may lead to an augmenting path with the new matching.
 

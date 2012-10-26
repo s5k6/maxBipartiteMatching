@@ -49,17 +49,17 @@ until read -t0.01 -n1 -s; do
         printf "%4i %7.3f %7i | " "${c1}" $(<"${dir}/t/t1");
         test "${c1}" -eq "$(wc -l <"${dir}/m/${count}")" || err "mismatch saved matching";
     else
-        printf "%4i %7.3f %7i | %7.3f %7i | dnf\n" -1 -1 -1 -1 -1;
+        printf "dnf\n";
         continue;
     fi;
 
-    if test "$nu" -lt 500; then
+    if false && test "$nu" -lt 500; then
         if /usr/bin/time -o"${dir}/t/t2" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher fgl "${dir}/g/${count}" >| "${dir}/t/c2"; then
             c2="$(<"${dir}/t/c2")";
             printf "%7.3f %7i | " $(<"${dir}/t/t2");
             test "${c1}" -eq "${c2}" || err "mismatch max flow";
         else
-            printf "%7.3f %7i | dnf\n" -1 -1;
+            printf "dnf\n";
             continue;
         fi;
     fi;
