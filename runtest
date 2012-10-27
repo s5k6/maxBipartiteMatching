@@ -16,54 +16,39 @@ function ask_yN {
     return 1;
 }
 
-nl="${1:?missing arg1: min number of nodes}";
-nu="${2:?missing arg2: max number of nodes}";
-db="${3:?missing arg3: min balance}";
 
-ghc --make -outputdir bin -o testMatcher -main-is TestMatcher TestMatcher.lhs;
-dir="log-${nl}-${nu}-${db}";
-mkdir -p "${dir}/g";
-mkdir -p "${dir}/m";
-mkdir -p "${dir}/t";
-log="${dir}/log";
+algo="${1:?which testMatcher algorithm to run}";
+flag="${2:?which compile flag}"
+dir="${3:?need graph directory}";
 
-if test -r "${log}"; then
-    count="$(wc -l <"${log}")";
-else
-    count=0;
-fi;
+log="log_${algo}_${flag}_$(basename "${dir}")";
 
-cat <<EOF | tee -a "${log}";
-# Graph               | Mine                 | FGL             |
-# no  lnc  rnc     ec |   mc       t     rss |       t     rss | ok
+mkdir -p "${TMPDIR:-/tmp}/runtest";
+tmp="$(mktemp -d --tmpdir runtest/XXXXXXXXXX)";
+
+cat > "${log}" <<EOF
+# graph     lc rc ec mc     mc time mem
 EOF
 
-until read -t0.01 -n1 -s; do
-    count="$((count + 1))";
-    test "$count" -gt 5000 && exit 0;
-    
-    printf "%4i %4i %4i %6i | " "${count}" $(./testMatcher mkgraph "${nl}" "${nu}" "${db}" "${dir}/g/${count}");
+# kill any process after 30 seconds of *cpu time*
+ulimit -t 30;
 
-    if /usr/bin/time -o"${dir}/t/t1" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher mine "${dir}/g/${count}" "${dir}/m/${count}" >| "${dir}/t/c1"; then
-        c1="$(<"${dir}/t/c1")";
-        printf "%4i %7.3f %7i | " "${c1}" $(<"${dir}/t/t1");
-        test "${c1}" -eq "$(wc -l <"${dir}/m/${count}")" || err "mismatch saved matching";
+tail -n+2 "${dir}/log" | while read graph lc rc ec m; do
+
+    printf "%4i     %4i %4i %6i %6i     " "${graph}" "${lc}" "${rc}" "${ec}" "${m}";
+    if
+        sem computations -x -- \
+            /usr/bin/time -o"${tmp}/t1" -f'%U %M' \
+            "./testMatcher_${flag}" "${algo}" "${dir}/${graph}" \
+            >| "${tmp}/c1";
+    then
+        c1="$(<"${tmp}/c1")";
+        printf "%4i %7.3f %7i     " "${c1}" $(<"${tmp}/t1");
+        test "${c1}" -eq "${m}" || err "mismatch saved matching";
     else
-        printf "dnf\n";
+        printf "%4i %7.3f %7i     dnf\n" -1 -1 -1;
         continue;
     fi;
-
-    if false && test "$nu" -lt 500; then
-        if /usr/bin/time -o"${dir}/t/t2" -f'%e %M' timelimit -q -s9 -t30 ./testMatcher fgl "${dir}/g/${count}" >| "${dir}/t/c2"; then
-            c2="$(<"${dir}/t/c2")";
-            printf "%7.3f %7i | " $(<"${dir}/t/t2");
-            test "${c1}" -eq "${c2}" || err "mismatch max flow";
-        else
-            printf "dnf\n";
-            continue;
-        fi;
-    fi;
-    
     printf "ok\n";
-    
+
 done 2>&1 | tee -a "${log}";

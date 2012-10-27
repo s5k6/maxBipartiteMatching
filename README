@@ -7,6 +7,10 @@ It seems (tested, not proven) to run faster, use less memory, and scale
 better than using MaxFlow from FGL with constant weight and additional
 source and sink nodes.  But it's not as good as Hopcroft–Karp would be.
 
+
+Testing
+-------
+
 Just as an exmaple, run
 
     ghci Data/Graph/MaxBipartiteMatching.lhs
@@ -27,4 +31,9 @@ to calculate a maximum cardinality matching of the graph shown below.
      / \        or 225 nodes.
     3   c
 
-Comments are welcome!
+
+Installation
+------------
+
+To install, simply do `cabal install --user`.  Runnning `make matcher`
+afterwards will generate a small binary from Matcher.lhs.

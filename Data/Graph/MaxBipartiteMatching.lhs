@@ -1,18 +1,16 @@
-
-Module      : MaxMatching
-Description : Maximum cardinality bipartite matching
-Copyright   : © 2012 Stefan Klinger <http://stefan-klinger.de/>
-License     : GNU AGPL 3 <http://www.gnu.org/licenses/agpl-3.0.html>
-
-Maintainer  : Stefan Klinger <http://stefan-klinger.de/>
-Stability   : unstable
+|
+  Description : Maximum cardinality bipartite matching
+  Copyright   : © 2012 Stefan Klinger <http://stefan-klinger.de/>
+  License     : GNU AGPL 3 <http://www.gnu.org/licenses/agpl-3.0.html>
+  Maintainer  : http://stefan-klinger.de
+  Stability   : experimental
 
 Find a maximum cardinality matching on a bipartite graph, using an
-augmenting path algorithm.
+augmenting path algorithm.  More efficient than using MaxFlow from FGL
+with constant weight and additional source and sink nodes.  But not as
+good as Hopcroft–Karp would be.
 
---------------------------------------------------------------------------------
-
-> module MaxMatching ( matching ) where
+> module Data.Graph.MaxBipartiteMatching ( matching ) where
 
 > import qualified Data.Map as M
 > import qualified Data.Set as S
@@ -34,8 +32,8 @@ node is called “free” iff it is not incident to any matched edge.
 
 An “augmenting path” contains no cycles, starts at a free α-node,
 terminates at a free β-node, and strictly alternately traverses
-unmatched and matched edges.  Exactly the first and last node of an
-augmenting path are free, the inner nodes are not.
+unmatched and matched edges.  Thus, exactly the first and last node of
+an augmenting path are free, the inner nodes are not.
 
 The algo is based on the idea of repeatedly finding an augmenting path
 with respect to a current matching, starting from the empty matching,
@@ -58,6 +56,13 @@ edge, it is sufficient to store the matching in a map of type `Map β α`,
 i.e., backwards.  The invariant is being a proper matching, i.e., being
 injective.
 
+| Return a maximum cardinality matching.  The input graph is a 'S.Set'
+  (α,β) of edges, which implies being bipartite and simple.  The matching
+  is returned as an injective 'M.Map' β α, i.e., backwards.
+
+  >>> matching $ Data.Set.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
+  fromList [('a',1),('b',3),('c',2)]
+
 > matching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
 > matching g = opt (M.keys fwd, []) fwd M.empty
 >     where
@@ -66,8 +71,10 @@ Travelling right, we can choose any unmatched edge.  To this end, the
 entire graph is maintained as a “forward mapping” of type `Map α [β]`,
 listing all β-nodes adjacent to an α-node.
 
->     fwd = foldl' (\m (x,y) -> M.insertWith (++) x [y] m) M.empty $ S.toList g
+>     fwd = foldl' (\m (x,y) -> M.insertWith' (++) x [y] m) M.empty $ S.toList g
 >    -- fwd = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty $ S.toList g
+>    -- fwd = foldl' (\m (x,y) -> M.insertWith (++) x [y] m) M.empty $ S.toList g
+>    -- fwd = foldr (\(x,y) -> M.insertWith' (++) x [y]) M.empty $ S.toList g
 
 
 Given two lists of (initially all) free and (initially no) failed
@@ -146,5 +153,5 @@ returned.
 
 > opt ([],failed) fwd mat = mat
 
-    
+ 
 ================================================================================

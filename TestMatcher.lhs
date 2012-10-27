@@ -1,6 +1,6 @@
 > module TestMatcher ( main ) where
 
-> import MaxMatching
+> import Data.Graph.MaxBipartiteMatching
 > import qualified Data.Set as S
 > import qualified Data.Map as M
 > import Control.Applicative

@@ -1,18 +1,19 @@
-delegate = matcher testMatcher
-phony = all clean help
+.PHONY : default all clean distclean test
 
-.PHONY : $(phony) $(delegate)
+default : matcher
 
-help :
-	 # phony    : $(phony)
-	 # producing: $(delegate)
-	 # You may want to use `cabal install --prefix=${HOME}/opt --user`
-
-all :  $(delegate)
+all : matcher testMatcher
 	 # Made all.  See `make help` for a list of useful targets.
 
 clean :
-	rm -rf bin $(delegate)
+	rm -rf bin
+
+distclean : clean
+	rm -rf matcher testMatcher
+
+test : testMatcher
+	./runtest
+
 
 testMatcher :
 	ghc --make -outputdir bin -o testMatcher -main-is TestMatcher TestMatcher.lhs
