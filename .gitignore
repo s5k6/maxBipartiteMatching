@@ -1,0 +1,5 @@
+.cabal-sandbox/
+bin/
+cabal.sandbox.config
+dist/
+matcher
