@@ -30,7 +30,7 @@ The Modules we want to test
 
 Modules to provide data structures
 
-> import Data.List ( foldl', sort )
+> import Data.List ( foldl', sort, intersperse )
 > import Control.Monad ( replicateM )
 > import qualified Data.Set as S
 > import qualified Data.Map as M
@@ -40,39 +40,40 @@ Modules to provide data structures
 Use new type for nodes to control QuickCheck's generation of test
 cases.  Use a phantom type to distinguish left and right nodes.
 
-> newtype Node a = N Int deriving (Eq, Ord, Show)
+> newtype Node phantom = N Int deriving (Eq, Ord, Show)
 > data Left
 > data Right
 
- > instance Arbitrary (Node a) where
-
-     The following would only use the generation of Integers.
-
-  >   arbitrary = N <$> arbitrary
-
- >   arbitrary = sized $ \s -> N <$> oneof (map return [1..s])
-
+> instance Enum (Node t) where
+>   toEnum = N
+>   fromEnum (N x) = x
 
 Types to represent graphs with such nodes, and matchings calculated
-for them.
+for them.  We need a new type `Graph` to specialize `Arbitrary` in a
+way that generates nice bipartite Graphs.
 
-> newtype Graph = G { edges :: S.Set (Node Left, Node Right) }
-> instance Show Graph where show = show . edges
+> type EdgeSet = S.Set (Node Left, Node Right)
+> newtype Graph = G { edges :: EdgeSet } deriving Show
 > type Matching = M.Map (Node Right) (Node Left)
+
+> instance Arbitrary (Node t) where
+>   arbitrary = N <$> arbitrary
 
 > instance Arbitrary Graph where
 >   arbitrary = sized arbitraryGraph
+>   shrink = map G . shrink . edges
 
 > arbitraryGraph :: Int -> Gen Graph
 > arbitraryGraph n0
 >   = do let n = n0 + 2
 >        l <- choose (1, n-1)
 >        let r = n - l
->            ls = map N [1..l] :: [Node Left]
->            rs = map N [l+1..n] :: [Node Right]
->            min_m = max l r
->        m <- choose (min_m, l * r)
->        G as <- foo (S.fromList ls) (S.fromList rs)
+>            ls = S.fromAscList [N 1 :: Node Left .. N l]
+>            rs = S.fromAscList [N (l+1) :: Node Right .. N n]
+>        m <- choose (max l r, l * r)
+>        ps <- bar (,) [] rs $ S.toList ls
+>        let rs' = S.difference rs . S.fromList $ map snd ps
+>        as <- S.fromList <$> bar (flip (,)) ps  ls (S.toList rs')
 >        bs <- S.fromList <$> replicateM m (randomEdge l r)
 >        return . G $ S.union as bs
 
@@ -82,21 +83,26 @@ for them.
 > randomEdge :: Int -> Int -> Gen (Node Left, Node Right)
 > randomEdge l r = (,) <$> randomNode (1,l) <*> randomNode (l+1, l+r)
 
-> foo :: S.Set (Node Left) -> S.Set (Node Right) -> Gen Graph
-> foo ls rs = do ps <- bar (,) [] (S.toList ls) rs
->                let rs' = S.difference rs . S.fromList $ map snd ps
->                ps' <- bar (flip (,)) ps (S.toList rs') ls
->                return . G $ S.fromList ps'
-
-> bar :: (Node a -> Node b -> c) -> [c] -> [Node a] -> S.Set (Node b) -> Gen [c]
-> bar pair z ls rs = foldl' f (return z) ls
+> bar :: (Node a -> Node b -> c)
+>     -> [c] -> S.Set (Node b) -> [Node a]
+>     -> Gen [c]
+> bar edge z rs = foldl' f (return z)
 >   where
->     f acc l = (\i ps -> pair l (S.elemAt i rs) : ps) <$> choose (0, S.size rs - 1) <*> acc
+>     f acc l = (\i ps -> edge l (S.elemAt i rs) : ps)
+>               <$>
+>               choose (0, S.size rs - 1)
+>               <*>
+>               acc
+
+
+> swap :: (a, b) -> (b, a)
+> swap (x, y) = (y, x)
+
 
 Get the graph induced by the matching.
 
 > induced :: Matching -> Graph
-> induced = G . S.fromList . map (uncurry $ flip (,)) . M.toAscList
+> induced = G . S.fromList . map swap . M.toAscList
 
 
 ----------------------------------------------------------------------
@@ -112,10 +118,21 @@ The graph induced by a matching must be a subgraph of the original.
 The matching is returned in a M.Map, which must be injective.
 
 > prop_injective :: Graph -> Bool
-> prop_injective = diff . sort . map snd . M.toList . matching . edges
+> prop_injective
+>   = diff . sort . tail . map snd . M.toList . matching . edges
 >   where
 >     diff [] = True
 >     diff xs = and $ zipWith (/=) xs (tail xs)
+
+
+A maximum cardinality matching must have the same size, no matter from
+which side it is created.
+
+> prop_symSize :: Graph -> Bool
+> prop_symSize g
+>   = M.size (matching . S.map swap $ edges g)
+>     ==
+>     M.size (matching $ edges g)
 
 
 ----------------------------------------------------------------------
