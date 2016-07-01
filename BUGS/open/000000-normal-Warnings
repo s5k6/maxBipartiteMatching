@@ -1,0 +1,27 @@
+severity: normal
+date: Fri Jul  1 14:10:28 CEST 2016
+title: Warnings
+
+Steps to reproduce
+------------------
+
+ghci -Wall Matcher.lhs
+
+
+Observed result
+---------------
+
+Many warnings
+
+
+Expected Result
+---------------
+
+No warnings
+
+
+Hints / ideas
+-------------
+
+review
+
