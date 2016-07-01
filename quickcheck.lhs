@@ -1,10 +1,8 @@
-> {-# LANGUAGE TemplateHaskell #-}
 
 One time setup:
 
     $ cabal sandbox init
     $ cabal install quickcheck
-    $ cabal install maxBipartiteMatching.cabal
 
 Running:
 
@@ -17,7 +15,12 @@ Reading:
 
 
 ----------------------------------------------------------------------
-Import
+Environment
+
+
+QuickCheck uses TemplateHaskell to scan for `prop_*` functions.
+
+> {-# LANGUAGE TemplateHaskell #-}
 
 
 Import the QuickCheck framework.
@@ -26,7 +29,7 @@ Import the QuickCheck framework.
 
 The Modules we want to test
 
-> import Data.Graph.MaxBipartiteMatching
+> import Data.Graph.MaxBipartiteMatching ( matching )
 
 Modules to provide data structures
 
@@ -34,8 +37,11 @@ Modules to provide data structures
 > import Control.Monad ( replicateM )
 > import qualified Data.Set as S
 > import qualified Data.Map as M
+> import System.Environment ( getArgs )
 
 ----------------------------------------------------------------------
+Generation of test data
+
 
 Use new type for nodes to control QuickCheck's generation of test
 cases.  Use a phantom type to distinguish left and right nodes.
@@ -48,51 +54,81 @@ cases.  Use a phantom type to distinguish left and right nodes.
 >   toEnum = N
 >   fromEnum (N x) = x
 
-Types to represent graphs with such nodes, and matchings calculated
-for them.  We need a new type `Graph` to specialize `Arbitrary` in a
-way that generates nice bipartite Graphs.
 
-> type EdgeSet = S.Set (Node Left, Node Right)
-> newtype Graph = G { edges :: EdgeSet } deriving Show
+Types to represent graphs with such nodes, and matchings calculated
+for them.
+
+> type Graph = S.Set (Node Left, Node Right)
 > type Matching = M.Map (Node Right) (Node Left)
 
-> instance Arbitrary (Node t) where
->   arbitrary = N <$> arbitrary
+We need a new type `Graph` to specialize `Arbitrary` in a
+way that generates a nicer variety of bipartite graphs.
 
-> instance Arbitrary Graph where
+> newtype ArbGraph = ArbGraph { graph :: Graph }
+
+> instance Show ArbGraph where
+>   showsPrec _ g = ss "{" . (foldl' (.) id . intersperse (ss ", ")
+>                                 . map sn . S.toList $ graph g) . ss "}"
+>     where
+>       ss = showString
+>       sc = showChar
+>       sn (N a, N b) = sc '(' . shows a . sc ',' . shows b . sc ')'
+
+
+Nodes must be arbitrary to allow shrinking of ArbGraph, which it is a
+subterm of.
+
+> instance Arbitrary (Node t) where arbitrary = N <$> arbitrary
+
+> instance Arbitrary ArbGraph where
 >   arbitrary = sized arbitraryGraph
->   shrink = map G . shrink . edges
+>   shrink = map ArbGraph . shrink . graph
 
-> arbitraryGraph :: Int -> Gen Graph
+> arbitraryGraph :: Int -> Gen ArbGraph
 > arbitraryGraph n0
 >   = do let n = n0 + 2
 >        l <- choose (1, n-1)
 >        let r = n - l
->            ls = S.fromAscList [N 1 :: Node Left .. N l]
->            rs = S.fromAscList [N (l+1) :: Node Right .. N n]
 >        m <- choose (max l r, l * r)
->        ps <- bar (,) [] rs $ S.toList ls
->        let rs' = S.difference rs . S.fromList $ map snd ps
->        as <- S.fromList <$> bar (flip (,)) ps  ls (S.toList rs')
->        bs <- S.fromList <$> replicateM m (randomEdge l r)
->        return . G $ S.union as bs
+
+         Find Right partners in range (l+1,n) for all Nodes Left.
+
+>        lrs <- bar (,) (l+1,n) [N 1 :: Node Left .. N l]
+
+         For all still unpaired Nodes Right, find partners in the
+         range (1,l).
+
+>        let unpaired
+>              = S.toList $ S.difference
+>                (S.fromAscList [N (l+1) :: Node Right .. N n])
+>                (S.fromList $ map snd lrs)
+>        rls <- bar (flip (,)) (1,l) unpaired
+
+         Generate at most m extra random edges.
+
+>        es <- S.fromList <$> replicateM m (randomEdge l r)
+>        return . ArbGraph $ S.unions [S.fromList lrs, S.fromList rls, es]
+
+Randomly choose a Node with label in given range.
 
 > randomNode :: (Int, Int) -> Gen (Node t)
 > randomNode = fmap N . choose
->
+
+Randomly choose an Edge with the left Node in (1,l), and the right one
+in (l+1,l+r).
+
 > randomEdge :: Int -> Int -> Gen (Node Left, Node Right)
 > randomEdge l r = (,) <$> randomNode (1,l) <*> randomNode (l+1, l+r)
 
+
 > bar :: (Node a -> Node b -> c)
->     -> [c] -> S.Set (Node b) -> [Node a]
+>     -> (Int,Int) -> [Node a]
 >     -> Gen [c]
-> bar edge z rs = foldl' f (return z)
+> bar edge (lo,hi) = foldl' f (return [])
 >   where
->     f acc l = (\i ps -> edge l (S.elemAt i rs) : ps)
->               <$>
->               choose (0, S.size rs - 1)
->               <*>
->               acc
+>     f acc l = (\i ps -> edge l (N i) : ps) <$> choose (lo,hi) <*> acc
+
+  *Main> sample $ bar (,) [] (5,7) [N 1 .. N 4]
 
 
 > swap :: (a, b) -> (b, a)
@@ -102,7 +138,7 @@ way that generates nice bipartite Graphs.
 Get the graph induced by the matching.
 
 > induced :: Matching -> Graph
-> induced = G . S.fromList . map swap . M.toAscList
+> induced = S.fromList . map swap . M.toAscList
 
 
 ----------------------------------------------------------------------
@@ -111,15 +147,15 @@ Properties
 
 The graph induced by a matching must be a subgraph of the original.
 
-> prop_subset :: Graph -> Bool
-> prop_subset (G g) = edges (induced $ matching g) `S.isSubsetOf` g
+> prop_subset :: ArbGraph -> Bool
+> prop_subset (ArbGraph g) = induced (matching g) `S.isSubsetOf` g
 
 
 The matching is returned in a M.Map, which must be injective.
 
-> prop_injective :: Graph -> Bool
+> prop_injective :: ArbGraph -> Bool
 > prop_injective
->   = diff . sort . tail . map snd . M.toList . matching . edges
+>   = diff . sort . tail . map snd . M.toList . matching . graph
 >   where
 >     diff [] = True
 >     diff xs = and $ zipWith (/=) xs (tail xs)
@@ -128,18 +164,18 @@ The matching is returned in a M.Map, which must be injective.
 A maximum cardinality matching must have the same size, no matter from
 which side it is created.
 
-> prop_symSize :: Graph -> Bool
-> prop_symSize g
->   = M.size (matching . S.map swap $ edges g)
+> prop_symSize :: ArbGraph -> Bool
+> prop_symSize (ArbGraph g)
+>   = M.size (matching $ S.map swap g)
 >     ==
->     M.size (matching $ edges g)
+>     M.size (matching g)
 
 
 ----------------------------------------------------------------------
 Checking all properties
 
 
-  * This requires the TemplateHaskell language extension, see pragme
+  * This requires the TemplateHaskell language extension, see pragma
     at very top of the file.
 
   * Insufficient documentation, but see
@@ -149,7 +185,16 @@ Checking all properties
 > return [] -- need this for GHC 7.8
 
 > main :: IO ()
-> main = $(quickCheckAll) >> return ()
+> main
+>   = do as <- getArgs
+>        $(forAllProperties)
+>          $
+>          quickCheckWithResult
+>          (null as ? stdArgs $ stdArgs{ maxSuccess = read $ head as })
+>        return ()
 
+
+> infix 1 ?
+> c ? x = \y-> if c then x else y
 
 ======================================================================
