@@ -1,0 +1,6 @@
+severity: feature
+date: Fri Jul  1 14:13:25 CEST 2016
+title: cabalize quickcheck
+
+The new testing stuff shouldmove to the appropriate directories, abd
+be somehow accessible from the cabal infrastructure.
