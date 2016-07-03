@@ -28,3 +28,10 @@ library
   exposed-modules: Data.Graph.MaxBipartiteMatching
 
   build-depends: base, containers
+
+                 
+test-suite test-MaxBipartiteMatching
+  type: exitcode-stdio-1.0
+  main-is: tests/quickcheck.lhs
+  build-depends: base, containers, QuickCheck
+  extensions: EmptyDataDecls
