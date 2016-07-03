@@ -12,7 +12,7 @@ good as Hopcroft–Karp would be.
 
 > module Data.Graph.MaxBipartiteMatching ( matching ) where
 
-> import qualified Data.Map as M
+> import qualified Data.Map.Strict as M
 > import qualified Data.Set as S
 > import Data.List ( foldl' )
 
@@ -71,11 +71,7 @@ Travelling right, we can choose any unmatched edge.  To this end, the
 entire graph is maintained as a “forward mapping” of type `Map α [β]`,
 listing all β-nodes adjacent to an α-node.
 
->     fwd = foldl' (\m (x,y) -> M.insertWith' (++) x [y] m) M.empty $ S.toList g
->    -- fwd = foldr (\(x,y) -> M.insertWith (++) x [y]) M.empty $ S.toList g
->    -- fwd = foldl' (\m (x,y) -> M.insertWith (++) x [y] m) M.empty $ S.toList g
->    -- fwd = foldr (\(x,y) -> M.insertWith' (++) x [y]) M.empty $ S.toList g
-
+>     fwd = foldl' (\m (x,y) -> M.insertWith (++) x [y] m) M.empty $ S.toList g
 
 Given two lists of (initially all) free and (initially no) failed
 α-nodes, the forward mapping, and an (initially empty) matching, the

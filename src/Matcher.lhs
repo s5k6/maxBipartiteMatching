@@ -3,16 +3,18 @@
 > import Data.Graph.MaxBipartiteMatching
 > import qualified Data.Set as S
 > import qualified Data.Map as M
-> import System.Environment ( getArgs, getEnvironment )
-> import Control.Applicative
+> import System.Environment ( getArgs )
 
 
+> from :: FilePath -> IO String
 > from "-" = getContents
 > from fn = readFile fn
 
+> to :: FilePath -> String -> IO ()
 > to "-" = putStr
 > to fn = writeFile fn
 
+> main :: IO ()
 > main
 >     = do as <- getArgs
 >          case as of
@@ -27,6 +29,7 @@
 >                      _ -> pairs ls
 >     pairs [] = []
 
+> help :: String
 > help =
 >  "\n\
 >  \Name: matcher — Maximum cardinality bipartite matching\n\

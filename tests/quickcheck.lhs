@@ -185,11 +185,6 @@ which side it is created.
 >     M.size (matching g)
 
 
-A property that fails to see if tests are actually performed
-
-> prop'_fail = const False
-
-
 ----------------------------------------------------------------------
 Checking all properties
 
@@ -214,6 +209,7 @@ Checking all properties
 >       = null as ? stdArgs $ stdArgs{ maxSuccess = read $ head as }
 
 > infix 1 ?
+> (?) :: Bool -> t -> t -> t
 > c ? x = \y-> if c then x else y
 
 ======================================================================

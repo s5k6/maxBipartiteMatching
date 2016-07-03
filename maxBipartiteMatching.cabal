@@ -26,16 +26,20 @@ cabal-version: >=1.8
 
 library
   exposed-modules: Data.Graph.MaxBipartiteMatching
+  hs-source-dirs: src
   build-depends: base, containers
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
 
 executable matcher
   main-is: Matcher.lhs
   hs-source-dirs: src
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
   build-depends: base, containers
                                   
 test-suite test-MaxBipartiteMatching
   type: exitcode-stdio-1.0
   main-is: quickcheck.lhs
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
   hs-source-dirs: src, tests
   build-depends: base, containers, QuickCheck
   extensions: EmptyDataDecls
