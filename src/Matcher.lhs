@@ -1,4 +1,4 @@
-> module Matcher ( main ) where
+> module Main ( main ) where
 
 > import Data.Graph.MaxBipartiteMatching
 > import qualified Data.Set as S

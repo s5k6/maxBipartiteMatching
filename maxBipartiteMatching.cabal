@@ -26,12 +26,16 @@ cabal-version: >=1.8
 
 library
   exposed-modules: Data.Graph.MaxBipartiteMatching
-
   build-depends: base, containers
 
-                 
+executable matcher
+  main-is: Matcher.lhs
+  hs-source-dirs: src
+  build-depends: base, containers
+                                  
 test-suite test-MaxBipartiteMatching
   type: exitcode-stdio-1.0
-  main-is: tests/quickcheck.lhs
+  main-is: quickcheck.lhs
+  hs-source-dirs: src, tests
   build-depends: base, containers, QuickCheck
   extensions: EmptyDataDecls

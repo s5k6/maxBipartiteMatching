@@ -1,3 +1,23 @@
+
+Building
+--------
+
+    $ cabal sandbox init
+    $ cabal build matcher
+    $ strip dist/build/matcher/matcher
+
+
+Testing
+-------
+
+    $ cabal install --enable-tests --only-dependencies
+    $ cabal test
+
+
+
+Original Announcement
+=====================
+
 Hello.
 
 I have written a function that calculates maximum cardinality matchings
