@@ -1,0 +1,12 @@
+severity: normal
+date: Sun Jul  3 15:40:49 CEST 2016
+title: outdated build information
+
+unclear how to build library and matcher tool
+
+
+Hints / ideas
+-------------
+
+Remove Makefile.  Overhaul README.
+
