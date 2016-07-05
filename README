@@ -1,59 +1,55 @@
 
-Building
+Synopsis
 --------
 
-    $ cabal sandbox init
-    $ cabal build matcher
-    $ strip dist/build/matcher/matcher
+A somewhat efficient, purely functional alternating-path algorithm to
+find maximum cardinality matchings in bipartite graphs.
 
 
-Testing
+Use
+---
+
+Module `Data.Graph.MaxBipartiteMatching` exports
+
+    matching :: (Ord b, Ord a) => S.Set (a, b) -> M.Map b a
+
+which calculates a maximum cardinality matching on the bibartite graph
+passed to it.  Bipartite-ness of the input is ensured by the involved
+types, the `Ord` constraint comes from the internal use of sets and
+maps.  The result type may seem awkward, but guarantees one of the
+desired properties, and is also a natural outcome for the problem at
+hand.
+
+The small command line tool implemented in `src/Matcher.lhs`
+demonstrates the use of the matching library.  See INSTALL for build
+instructions.
+
+
+Implementation
+--------------
+
+The implementation is quite compact
+
+    $ grep -Ec '^>' src/Data/Graph/MaxBipartiteMatching.lhs
+    25
+
+with the core function accounting for only 21 lines.
+
+The source file contains exensive information about the workings of
+the algorithm.  There is no correctness proof, but a test suite is
+available, see INSTALL.
+
+
+Bugs
+----
+
+See the `BUGS/open` subdirectory.
+
+
+History
 -------
 
-    $ cabal install --enable-tests --only-dependencies
-    $ cabal test
+The implementation was originally announced on Mon, 22 Oct 2012 on the
+<haskell-cafe@haskell.org> mailing list, see file `HISTORY` for the
+original announcement.
 
-
-
-Original Announcement
-=====================
-
-Hello.
-
-I have written a function that calculates maximum cardinality matchings
-on bipartite graphs.  It's quite short.
-
-It seems (tested, not proven) to run faster, use less memory, and scale
-better than using MaxFlow from FGL with constant weight and additional
-source and sink nodes.  But it's not as good as Hopcroft–Karp would be.
-
-
-Testing
--------
-
-Just as an exmaple, run
-
-    ghci Data/Graph/MaxBipartiteMatching.lhs
-
-and then use
-
-    matching $ S.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
-
-to calculate a maximum cardinality matching of the graph shown below.
-
-    1---a       Note the somewhat awkward type of the matching
-     \ /        function, returning a Map instead of a Set, with the
-      X         edges being backwards!
-     / \
-    2   b       matching :: (Ord b, Ord a) => S.Set (a, b) -> M.Map b a
-     \ /        
-      X         On my machine, it takes less than 2s on 10k edges
-     / \        or 225 nodes.
-    3   c
-
-
-Installation
-------------
-
-To install, simply do `cabal install --user`.  Runnning `make matcher`
-afterwards will generate a small binary from Matcher.lhs.

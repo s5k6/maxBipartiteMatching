@@ -1,0 +1,47 @@
+Date: Mon, 22 Oct 2012 22:28:38 +0200
+From: Stefan Klinger <XXXXXX@stefan-klinger.de>
+To: YYYYYY@haskell.org
+Subject: Maximum bipartite matching: 24 lines
+
+Hello.
+
+I have written a function that calculates maximum cardinality matchings
+on bipartite graphs.  It's only 24 lines of code.
+
+It seems (tested, not proven) to run faster, use less memory, and scale
+better than using MaxFlow from FGL with constant weight and additional
+source and sink nodes.  But it's not as good as Hopcroft–Karp would be.
+
+Attached is the module MaxMatching which also contains extensive
+documentation of the rationale behind its design.  I would hope to get
+any feedback on this: What do you think about the approach?  Did I
+oversee anything?  Do you know of any other purely functional solution
+to this problem?
+
+Just as an exmaple, run `ghci MaxMatching.lhs` and then use
+
+    matching $ S.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
+
+to calculate a maximum cardinality matching of the graph shown below.
+
+    1---a       Note the somewhat awkward type of the matching
+     \ /        function, returning a Map instead of a Set, with the
+      X         edges being backwards!
+     / \
+    2   b       matching :: (Ord b, Ord a) => S.Set (a, b) -> M.Map b a
+     \ /        
+      X         On my machine, it takes less than 2s on 10k edges
+     / \        or 225 nodes.
+    3   c
+
+Comments are welcome!
+
+Thank you!
+Stefan
+
+
+-- 
+Stefan Klinger                                      o/klettern
+                                                    /\/  bis zum
+send plaintext only - max size 32kB - no spam         \   Abfallen
+http://stefan-klinger.de

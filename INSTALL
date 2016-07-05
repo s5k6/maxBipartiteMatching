@@ -1,0 +1,22 @@
+Building
+--------
+
+    $ cabal sandbox init
+    $ cabal build matcher
+    $ strip dist/build/matcher/matcher
+
+
+Install library
+---------------
+
+    $ cabal install
+
+Note: This will also install the demo tool `matcher`.
+
+
+Testing
+-------
+
+    $ cabal install --enable-tests --only-dependencies
+    $ cabal test
+
