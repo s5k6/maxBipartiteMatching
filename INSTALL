@@ -20,3 +20,13 @@ Testing
     $ cabal install --enable-tests --only-dependencies
     $ cabal test
 
+Benchmark
+---------
+
+Note: This is still incomplete
+
+    $ cabal configure --enable-benchmarks
+    $ cabal install --enable-benchmarks --only-dependencies
+    $ cabal build mkGraphs
+
+Now use `mkGraphs` to generate test graph instances.

@@ -36,10 +36,18 @@ executable matcher
   ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
   build-depends: base, containers
                                   
-test-suite test-MaxBipartiteMatching
+test-suite quickcheck
   type: exitcode-stdio-1.0
   main-is: quickcheck.lhs
   ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
   hs-source-dirs: src, tests
   build-depends: base, containers, QuickCheck
+  extensions: EmptyDataDecls
+
+benchmark mkGraphs
+  type: exitcode-stdio-1.0
+  main-is: mkGraphs.lhs
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror -threaded
+  hs-source-dirs: src, tests
+  build-depends: base, containers, QuickCheck, parallel-io, directory
   extensions: EmptyDataDecls
