@@ -31,10 +31,16 @@ To get parallelism [1], compile with `-threaded`, and run with
 >            -> do setNumCapabilities $ int threads
 >                  createDirectoryIfMissing True dir
 >                  P.parallel_  -- sequence_
->                    [ serialize <$> arbGraph n >>= writeFile fn >> putStrLn fn
+>                    [ do g <- arbGraph n
+>                         let m = S.size g
+>                             fn = concat
+>                                  [ dir, "/", show (n+m), "-", show n, "n-"
+>                                  , show m, "e-v", show r, ".txt"
+>                                  ]
+>                         writeFile fn $ serialize g
+>                         putStrLn fn
 >                    | n <- map int sizes
 >                    , r <- take (int rounds) [1::Int ..]
->                    , let fn = concat [dir, "/", show n, "-", show r, ".txt"]
 >                    ]
 >                  P.stopGlobalPool
 >          _ -> do putStrLn help

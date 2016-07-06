@@ -54,6 +54,17 @@ test-suite fglCompare
     build-depends: base, containers, QuickCheck, fgl
     extensions: EmptyDataDecls
 
+executable fglMatcher
+    if flag(buildPerfTest)
+        buildable: True
+    else
+        buildable: False
+    main-is: fglMatcher.lhs
+    hs-source-dirs: src, tests
+    ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
+    build-depends: base, containers, fgl
+    extensions: EmptyDataDecls
+
 executable mkGraphs
     if flag(buildPerfTest)
         buildable: True

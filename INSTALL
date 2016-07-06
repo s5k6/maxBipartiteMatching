@@ -25,8 +25,7 @@ Benchmark
 
 Note: This is still incomplete
 
-    $ cabal configure --enable-benchmarks
-    $ cabal install --enable-benchmarks --only-dependencies
-    $ cabal build mkGraphs
+    $ cabal install --enable-tests --flag buildPerfTest
+    $ ./shootout
 
 Now use `mkGraphs` to generate test graph instances.
