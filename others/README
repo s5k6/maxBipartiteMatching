@@ -1,0 +1,38 @@
+
+
+
+----------------------------------------------------------------------
+https://github.com/ivant/graph-matching
+
+
+    /tmp$ git clone https://github.com/ivant/graph-matching.git
+    /tmp$ cd graph-matching/
+    /tmp/graph-matching$ git rev-parse HEAD
+    939bb68d972bea678d561f1d8e26c07f534f2567
+    /tmp/graph-matching$ cabal sandbox init
+    /tmp/graph-matching$ cabal install --only-dependencies
+    [...]
+    Dependency tree exhaustively searched.
+
+Tried to remove the upper bounds on all dependencies in
+`graph-matching.cabal`, so that the respective line reads:
+
+    Build-depends: base >= 4, containers >= 0.4, array >= 0.3
+                 , transformers >= 0.2.2
+
+This fails with a syntax error, which I cannot fix
+
+    /tmp/graph-matching$ cabal build
+    Package has never been configured. Configuring with default flags. If this
+    fails, please run configure manually.
+    Resolving dependencies...
+    Configuring graph-matching-0.2...
+    Building graph-matching-0.2...
+    Preprocessing library graph-matching-0.2...
+    [1 of 1] Compiling Data.Graph.HopcroftKarp ( Data/Graph/HopcroftKarp.hs, dist/build/Data/Graph/HopcroftKarp.o )
+
+    Data/Graph/HopcroftKarp.hs:176:39: error: parse error on input ‘]’
+
+Bailing out.
+
+======================================================================

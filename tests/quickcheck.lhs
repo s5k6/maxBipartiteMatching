@@ -65,7 +65,7 @@ Helper functions for properties
 Get the graph induced by the matching.
 
 > induced :: Matching -> Graph
-> induced = S.fromList . map swap . M.toAscList
+> induced = S.fromList . map swap . M.toList
 
 
 ----------------------------------------------------------------------
