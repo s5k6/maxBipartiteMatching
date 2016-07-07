@@ -1,0 +1,110 @@
+#!/bin/bash
+set -u -e -C;
+shopt -s nullglob;
+
+
+dir='./tmp';
+cpus="$(nproc)"
+
+
+function err { echo "$@" >&2; exit 1; }
+function req { test -x "$1" || err "missing: $1"; }
+
+req dist/build/fgl/fgl
+req dist/build/matcher/matcher
+req dist/build/mkGraphs/mkGraphs
+
+
+
+
+if test -d "$dir"; then
+    echo "Using existing test data";
+else
+
+    cat <<EOF
+----------------------------------------------------------------------
+Generating random graphs...
+EOF
+    
+    # Generate test data if $dir does not exist.  The first line
+    # generates a laughably small collection to see if the setup
+    # actually runs, 3 versions of random graphs with 10 and 20 nodes.
+    # The second line generates 20 versions of random graphs with 10
+    # to 1000 nodes in steps of 20.
+
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 3 {10..100..10} >&2;
+    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 20 {10..1000..20} >&2;
+fi;
+
+
+cat <<EOF
+----------------------------------------------------------------------
+Calculating matchings, do this in parallell...
+EOF
+
+
+for g in "$dir"/*.txt; do
+
+    b="$(basename "$g" .txt)";
+
+    for m in fgl matcher; do
+
+        if test -e "$dir/$m.$b.time"; then
+            echo "Skipping: $g";
+        else
+            echo "Running $m on $g";
+            timeout -s9 30 /usr/bin/time \
+              -o "$dir/$m.$b.time" \
+              -f "%U %M" \
+              "dist/build/$m/$m" "$g" \
+              >| "$dir/$m.$b.out" \
+              || rm -f "$dir/$m.$b.time" &
+        fi;
+        
+        while test "$(jobs | grep -c Running)" -ge "$cpus"; do
+            wait -n;
+        done;
+
+    done;
+done;
+
+wait && echo "Waiting for all jobs";
+
+
+
+cat <<EOF
+----------------------------------------------------------------------
+Comparing all outputs...
+EOF
+
+for i in "$dir"/*.txt; do
+    cmp "$dir"/{matcher,fgl}.$(basename "$i" .txt).out || true;
+done;
+
+
+
+cat <<EOF
+----------------------------------------------------------------------
+Aggregating timing...
+EOF
+
+for m in fgl matcher; do
+    for f in "${dir}/${m}."*'.time'; do
+        dat="$(sed -r 's:[^.]*\.([0-9]+)-([0-9]+)n-([0-9]+)e-v([0-9]+):\1 \2 \3 \4:' <<< "$(basename "$f" .time)")";
+
+        echo "${dat} $(< $f)" >> "${dir}/timings.${m}";
+    done;
+    
+done;
+
+
+
+cat <<EOF
+----------------------------------------------------------------------
+Ok, timings are collected in ${dir}/timings.*
+You can plot them using
+
+    $ scripts/plot
+
+EOF
+

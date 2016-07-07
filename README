@@ -35,7 +35,7 @@ The implementation is quite compact
 
 with the core function accounting for only 21 lines.
 
-The source file contains exensive information about the workings of
+The source file contains extensive information about the workings of
 the algorithm.  There is no correctness proof, but a test suite is
 available, see INSTALL.
 

@@ -1,0 +1,100 @@
+#!/usr/bin/gnuplot
+
+dir = "./tmp";
+
+term = "wxt";
+#term = "png"
+#term="pdf";
+
+
+
+set terminal term
+
+if (term eq "png") set terminal term size 1200, 900
+if (term eq "pdf") set terminal term size 29.7 cm, 21.0 cm
+
+set key horizontal bmargin opaque samplen 1
+
+
+styleFgl     = "title 'fgl'     with points pt 6 ps 1"
+styleMatcher = "title 'matcher' with points pt 1 ps 1"
+
+
+
+# layout of data files
+# n+m  n    m    v    [s]    [kB]
+  s=1; n=2; m=3; v=4; cpu=5; rss=6;
+
+
+
+set title "running time / graph size"
+set xlabel "#V + #E"
+set ylabel "time [s]"
+if (term ne "wxt") set output sprintf("%s/cpu_nodes+edges.%s", dir, term)
+
+plot "tmp/timings.fgl"      using s:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using s:cpu  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "running time / node count"
+set xlabel "#V"
+set ylabel "time [s]"
+if (term ne "wxt") set output sprintf("%s/cpu_nodes.%s", dir, term)
+
+plot "tmp/timings.fgl"      using n:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using n:cpu  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "running time / edge count"
+set xlabel "#E"
+set ylabel "time [s]"
+if (term ne "wxt") set output sprintf("%s/cpu_edges.%s", dir, term)
+
+plot "tmp/timings.fgl"      using m:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using m:cpu  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+
+
+set title "memory consumption / graph size"
+set xlabel "#V + #E"
+set ylabel "max RSS [kB]"
+if (term ne "wxt") set output sprintf("%s/mem_nodes+edges.%s", dir, term)
+
+plot "tmp/timings.fgl"      using s:rss  @styleFgl, \
+     "tmp/timings.matcher"  using s:rss  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "memory consumption / node count"
+set xlabel "#V"
+set ylabel "max RSS [kB]"
+if (term ne "wxt") set output sprintf("%s/mem_nodes.%s", dir, term)
+
+plot "tmp/timings.fgl"      using n:rss  @styleFgl, \
+     "tmp/timings.matcher"  using n:rss  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "memory consumption / edge count"
+set xlabel "#E"
+set ylabel "max RSS [kB]"
+if (term ne "wxt") set output sprintf("%s/mem_edges.%s", dir, term)
+
+plot "tmp/timings.fgl"      using m:rss  @styleFgl, \
+     "tmp/timings.matcher"  using m:rss  @styleMatcher
+
+if (term eq "wxt") pause mouse close
