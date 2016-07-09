@@ -89,9 +89,9 @@ nodes set aside previously are appended to the free nodes, since they
 may lead to an augmenting path with the new matching.
 
 > opt (x:free,failed) fwd mat
->     = either (flip (opt (free,x:failed)) mat) (opt (free++failed,[]) fwd)
->       $ right fwd [] x
->     where
+>   = either (flip (opt (free,x:failed)) mat) (opt (free++failed,[]) fwd)
+>     $ right fwd [] x
+>   where
 
 `right` returns either `Right` a better matching if an augmenting path
 starting at `x` was found, or `Left` a reduced forward mapping
@@ -110,37 +110,36 @@ reached from `x`.  We try to walk left from these, without ever going
 back to `x`, which is why it's deleted from `rem`.
 
 >     right rem path x
->         = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
->         where
+>       = maybe (Left rem) (left $ M.delete x rem) $ M.lookup x rem
+>       where
 >         left rem [] = Left rem
->         left rem (y:ys)
->             = (\ e n j -> maybe n j e) -- for better readability
 
-For the first reacheble β-node `y`, we check wheter it is free, i.e.,
-not in the matching `mat`.
-
->               (M.lookup y mat)
+For the first reacheble β-node `y`, we check in line (C) below wheter
+it is free, i.e., *not* in the matching `mat`.
 
 If so, then `path'` is used to augment the matching.  We need to augment
 anyways, so we can do this here and return a new matching instead of
 returning a path and augment later.  Also, we don't collect multiple
 paths before augmentation, because that would require to protect the
 still-free β-node `y` from being used in another augmenting path.  Enjoy
-this:
+this happening in line (A).
 
->               (Right $ foldr (uncurry $ flip M.insert) mat path')
+However, if `y` is not free, (i.e., in the matching) we try in line
+(B) to continue where the matched edge leads to, descending `right`
+from there.  If that fails, we try one of the remaining `ys`,
+recursing `left`.
 
-However, if `y` is not free, we try to continue where the matched edge
-leads to, descending `right` from there.  If that fails, we try one of
-the remaining `ys`, recursing `left`.
+>         left rem (y:ys)
+>           = maybe
+>             (Right $ foldr (uncurry $ flip M.insert) mat path') --A
+>             (either (flip left ys) Right . right rem path')     --B
+>             (M.lookup y mat)                                    --C
 
->               (either (flip left ys) Right . right rem path')
-
->             where
 
 The new path is made up of the currently last edge (x,y) and what we
 have seen on the DFS so far,
 
+>           where
 >             path' = (x,y):path
 
 Finally, when no more improvements are found for any potential left
