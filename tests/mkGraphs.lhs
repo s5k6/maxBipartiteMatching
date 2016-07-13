@@ -19,9 +19,8 @@
 
 
 
-To get parallelism [1], compile with `-threaded`, and run with
-
-    ./mkGraphs +RTS -N$(nproc) -RTS
+To get parallelism [1], compile with `-threaded`.  The number of
+threads to actually use must be given as command line argument.
 
 > main :: IO ()
 > main
@@ -31,15 +30,20 @@ To get parallelism [1], compile with `-threaded`, and run with
 >            -> do setNumCapabilities $ int threads
 >                  createDirectoryIfMissing True dir
 >                  P.parallel_  -- sequence_
->                    [ do g <- arbGraph n
+>                    [ do g <- arbGraph s
 >                         let m = S.size g
+>                             n = (\(xs,ys)->
+>                                   S.size (S.fromList xs)
+>                                   + S.size (S.fromList ys)
+>                                 )
+>                                 . unzip $ S.toList g
 >                             fn = concat
 >                                  [ dir, "/", show (n+m), "-", show n, "n-"
 >                                  , show m, "e-v", show r, ".txt"
 >                                  ]
 >                         writeFile fn $ serialize g
 >                         putStrLn fn
->                    | n <- map int sizes
+>                    | s <- map int sizes
 >                    , r <- take (int rounds) [1::Int ..]
 >                    ]
 >                  P.stopGlobalPool

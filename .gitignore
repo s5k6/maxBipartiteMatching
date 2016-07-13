@@ -3,3 +3,4 @@ bin/
 cabal.sandbox.config
 dist/
 matcher
+tmp

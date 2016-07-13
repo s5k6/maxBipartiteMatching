@@ -16,9 +16,27 @@ if (term eq "pdf") set terminal term size 29.7 cm, 21.0 cm
 set key horizontal bmargin opaque samplen 1
 
 
-styleFgl     = "title 'fgl'     with points pt 6 ps 1"
-styleMatcher = "title 'matcher' with points pt 1 ps 1"
+styleFgl     = "title 'fgl'     with points pt 1 ps 1 lt 1"
+styleMatcher = "title 'matcher' with points pt 6 ps 1 lt 2"
+styleOther   = "with points pt 2 ps 1 lt 7"
 
+
+#______________________________________________________________________
+# plotting the distribution of samples
+
+
+set title "distribution of samples"
+set xlabel "#V"
+set ylabel "#E"
+if (term ne "wxt") set output sprintf("%s/nodes_edges.%s", dir, term)
+
+plot "tmp/nodes_edges.txt"  using 1:2  title 'sample' @styleOther
+
+if (term eq "wxt") pause mouse close
+
+
+#______________________________________________________________________
+# plotting the timings 
 
 
 # layout of data files
@@ -60,8 +78,6 @@ plot "tmp/timings.fgl"      using m:cpu  @styleFgl, \
      "tmp/timings.matcher"  using m:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
-
-
 
 
 

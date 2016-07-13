@@ -33,8 +33,13 @@ EOF
     # to 1000 nodes in steps of 20.
 
     #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 3 {10..100..10} >&2;
-    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 20 {10..1000..20} >&2;
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 1000 >&2;
+    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 10000 700 >&2;
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 1000 100000 >&2;
 fi;
+
+
+ls tmp | sed -rn 's:([0-9]+)-([0-9]+)n-([0-9]+)e-v([0-9]+)\.txt:\2 \3:p' >| "$dir"/nodes_edges.txt
 
 
 cat <<EOF
