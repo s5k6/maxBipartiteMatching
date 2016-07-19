@@ -26,20 +26,22 @@ else
 Generating random graphs...
 EOF
     
-    # Generate test data if $dir does not exist.  The first line
-    # generates a laughably small collection to see if the setup
-    # actually runs, 3 versions of random graphs with 10 and 20 nodes.
-    # The second line generates 20 versions of random graphs with 10
-    # to 1000 nodes in steps of 20.
+    # Generate test data if $dir does not exist.
 
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 3 {10..100..10} >&2;
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 1000 >&2;
-    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 10000 700 >&2;
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 1000 100000 >&2;
+    # Large test: 2k graphs with up to 2000 nodes
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 2000 2000 >&2;
+
+    # Small test: 500 graphs with up to 1k nodes
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 500 1000 >&2;
+
+    # Tiny test: 200 graphs with up to 100 nodes
+    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 100 >&2;
+
 fi;
 
 
-ls tmp | sed -rn 's:([0-9]+)-([0-9]+)n-([0-9]+)e-v([0-9]+)\.txt:\2 \3:p' >| "$dir"/nodes_edges.txt
+# data format: <graphId> <left> <right> <edges>
+ls "$dir" | sed -rn 's:g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e.graph:\1 \2 \3 \4:p' >| "$dir"/nodes_edges.data
 
 
 cat <<EOF
@@ -48,9 +50,9 @@ Calculating matchings, do this in parallell...
 EOF
 
 
-for g in "$dir"/*.txt; do
+for g in "$dir"/*.graph; do
 
-    b="$(basename "$g" .txt)";
+    b="$(basename "$g" .graph)";
 
     for m in fgl matcher; do
 
@@ -82,8 +84,8 @@ cat <<EOF
 Comparing all outputs...
 EOF
 
-for i in "$dir"/*.txt; do
-    cmp "$dir"/{matcher,fgl}.$(basename "$i" .txt).out || true;
+for i in "$dir"/*.graph; do
+    cmp "$dir"/{matcher,fgl}.$(basename "$i" .graph).out || true;
 done;
 
 
@@ -95,7 +97,7 @@ EOF
 
 for m in fgl matcher; do
     for f in "${dir}/${m}."*'.time'; do
-        dat="$(sed -r 's:[^.]*\.([0-9]+)-([0-9]+)n-([0-9]+)e-v([0-9]+):\1 \2 \3 \4:' <<< "$(basename "$f" .time)")";
+        dat="$(sed -rn 's:[^.]*\.g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e:\1 \2 \3 \4:p' <<< "$(basename "$f" .time)")";
 
         echo "${dat} $(< $f)" >> "${dir}/timings.${m}";
     done;
@@ -106,10 +108,18 @@ done;
 
 cat <<EOF
 ----------------------------------------------------------------------
-Ok, timings are collected in ${dir}/timings.*
-You can plot them using
-
-    $ scripts/plot
+Ok, timings are collected in \`${dir}/timings.*\`.  Calling gnuplot...
 
 EOF
 
+./scripts/plot </dev/null || echo 'gnuplot FAILED';
+
+
+
+cat <<EOF
+----------------------------------------------------------------------
+You can edit \`scripts/plot\` and relaunch just that to plot the
+same data in different output formats.
+
+Done.
+EOF

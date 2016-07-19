@@ -20,17 +20,35 @@ styleFgl     = "title 'fgl'     with points pt 1 ps 1 lt 1"
 styleMatcher = "title 'matcher' with points pt 6 ps 1 lt 2"
 styleOther   = "with points pt 2 ps 1 lt 7"
 
+density = "(column(m)/(column(l)*column(r)))"
+size = "(column(l) + column(r) + column(m))"
+nodes = "(column(l) + column(r))"
 
 #______________________________________________________________________
 # plotting the distribution of samples
 
 
-set title "distribution of samples"
+set title "distribution of samples: edge count / node count"
 set xlabel "#V"
 set ylabel "#E"
 if (term ne "wxt") set output sprintf("%s/nodes_edges.%s", dir, term)
 
-plot "tmp/nodes_edges.txt"  using 1:2  title 'sample' @styleOther
+# format: <graphId> <left> <right> <edges>
+
+plot "tmp/nodes_edges.data"  using ($2 + $3):4  title 'sample' @styleOther
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "distribution of samples: density / size"
+set xlabel "#V + #E"
+set ylabel "#E / (#left * #right)"
+if (term ne "wxt") set output sprintf("%s/density_size.%s", dir, term)
+
+# format: <graphId> <left> <right> <edges>
+
+plot "tmp/nodes_edges.data"  using ($2 + $3 + $4):($4 /($2*$3))  title 'sample' @styleOther
 
 if (term eq "wxt") pause mouse close
 
@@ -40,8 +58,8 @@ if (term eq "wxt") pause mouse close
 
 
 # layout of data files
-# n+m  n    m    v    [s]    [kB]
-  s=1; n=2; m=3; v=4; cpu=5; rss=6;
+# id   l    r    m    [s]    [kB]
+  s=1; l=2; r=3; m=4; cpu=5; rss=6;
 
 
 
@@ -50,8 +68,8 @@ set xlabel "#V + #E"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes+edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using s:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using s:cpu  @styleMatcher
+plot "tmp/timings.fgl"      using @size:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using @size:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -62,8 +80,8 @@ set xlabel "#V"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes.%s", dir, term)
 
-plot "tmp/timings.fgl"      using n:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using n:cpu  @styleMatcher
+plot "tmp/timings.fgl"      using @nodes:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using @nodes:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -81,13 +99,25 @@ if (term eq "wxt") pause mouse close
 
 
 
+set title "running time / density"
+set xlabel "#E / (#left * #right)"
+set ylabel "time [s]"
+if (term ne "wxt") set output sprintf("%s/cpu_density.%s", dir, term)
+
+plot "tmp/timings.fgl"      using @density:cpu  @styleFgl, \
+     "tmp/timings.matcher"  using @density:cpu  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
 set title "memory consumption / graph size"
 set xlabel "#V + #E"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes+edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using s:rss  @styleFgl, \
-     "tmp/timings.matcher"  using s:rss  @styleMatcher
+plot "tmp/timings.fgl"      using @size:rss  @styleFgl, \
+     "tmp/timings.matcher"  using @size:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -98,8 +128,8 @@ set xlabel "#V"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes.%s", dir, term)
 
-plot "tmp/timings.fgl"      using n:rss  @styleFgl, \
-     "tmp/timings.matcher"  using n:rss  @styleMatcher
+plot "tmp/timings.fgl"      using @nodes:rss  @styleFgl, \
+     "tmp/timings.matcher"  using @nodes:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -112,5 +142,17 @@ if (term ne "wxt") set output sprintf("%s/mem_edges.%s", dir, term)
 
 plot "tmp/timings.fgl"      using m:rss  @styleFgl, \
      "tmp/timings.matcher"  using m:rss  @styleMatcher
+
+if (term eq "wxt") pause mouse close
+
+
+
+set title "memory consumption / density"
+set xlabel "#E / (#left * #right)"
+set ylabel "max RSS [kB]"
+if (term ne "wxt") set output sprintf("%s/mem_density.%s", dir, term)
+
+plot "tmp/timings.fgl"      using @density:rss  @styleFgl, \
+     "tmp/timings.matcher"  using @density:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close

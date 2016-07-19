@@ -39,8 +39,7 @@ Note: This will take a long time and consume all CPUs you have.
       cabal install --enable-tests --only-dependencies --flag buildPerfTest &&
       cabal configure  --enable-tests --flag buildPerfTest &&
       cabal build &&
-      scripts/shootout &&
-      scripts/plot
+      scripts/shootout
 
 The last command will use gnuplot to create the plots as
 `./tmp/*.png`.  The plotting script is prepared for creating PDF or

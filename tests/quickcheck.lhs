@@ -83,7 +83,7 @@ The matching is returned in a M.Map, which must be injective.
 
 > prop_injective :: ArbGraph -> Bool
 > prop_injective
->   = diff . sort . tail . map snd . M.toList . matching . graph
+>   = diff . sort . map snd . M.toList . matching . graph
 >   where
 >     diff [] = True
 >     diff xs = and $ zipWith (/=) xs (tail xs)

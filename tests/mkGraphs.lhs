@@ -5,6 +5,7 @@
 > import Data.List ( intersperse )
 > import Control.Concurrent.ParallelIO.Global as P
 > import Control.Concurrent ( setNumCapabilities )
+> import Control.Monad ( when )
 > import System.Directory ( createDirectoryIfMissing )
 > import System.Environment ( getArgs )
 > import System.Exit ( exitFailure )
@@ -28,28 +29,28 @@ threads to actually use must be given as command line argument.
 >        case as of
 >          (threads : dir : rounds : sizes) | not $ null sizes
 >            -> do setNumCapabilities $ int threads
->                  createDirectoryIfMissing True dir
+>                  when (dir /= "/dev/null") $
+>                      createDirectoryIfMissing True dir
 >                  P.parallel_  -- sequence_
 >                    [ do g <- arbGraph s
 >                         let m = S.size g
->                             n = (\(xs,ys)->
->                                   S.size (S.fromList xs)
->                                   + S.size (S.fromList ys)
->                                 )
->                                 . unzip $ S.toList g
+>                             (l,r) = (\(xs,ys)-> ( S.size (S.fromList xs)
+>                                                 , S.size (S.fromList ys)
+>                                                 )
+>                                     ) . unzip $ S.toList g
 >                             fn = concat
->                                  [ dir, "/", show (n+m), "-", show n, "n-"
->                                  , show m, "e-v", show r, ".txt"
+>                                  [ dir, "/g", show i, "-", show l, "l-"
+>                                  , show r, "r-", show m, "e.graph"
 >                                  ]
->                         writeFile fn $ serialize g
+>                         when (dir /= "/dev/null") $
+>                             writeFile fn $ serialize g
 >                         putStrLn fn
 >                    | s <- map int sizes
->                    , r <- take (int rounds) [1::Int ..]
+>                    , i <- take (int rounds) [1::Int ..]
 >                    ]
 >                  P.stopGlobalPool
 >          _ -> do putStrLn help
 >                  exitFailure
->               
 
 > int :: String -> Int
 > int = read

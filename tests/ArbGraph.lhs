@@ -4,13 +4,8 @@
 >   ) where
 
 > import Test.QuickCheck
-
-Modules to provide data structures
-
-> import Data.List ( foldl', intersperse, sort )
-
- > import Control.Monad ( replicateM )
-
+> import QCHelper
+> import Data.List ( foldl', intersperse )
 > import qualified Data.Set as S
 > import qualified Data.Map as M
 
@@ -65,20 +60,62 @@ subterm of.
 >   shrink = map ArbGraph . shrink . graph
 
 
+
+Ok, the third try to generate sensibly distributed random bipartite
+graphs.
+
 > arbitraryGraph :: Int -> Gen ArbGraph
 > arbitraryGraph size
->   = do m <- floor . sqrt . (fromIntegral :: Int -> Double) <$> choose (1, size ^ (2 :: Int))
->        l <- choose (1, m)
->        r <- choose (ceiling $ (fromIntegral m :: Double) / fromIntegral l, 2 * m - l)
->        lds <- map succ <$> arbitrarySum l (m - l)
->        let n = l + r
->            ls = [N 1 :: Node Left .. N l]
->            rs = [N (l+1) :: Node Right .. N n]
->        ArbGraph . S.fromList . concat
->          <$>
->          sequence
->          (zipWith (\l d -> map ((,) l) . take d <$> shuffle rs) ls lds)
+>   = do n <- sqrt' <$> choose (sqr 2, sqr size)
+>        l <- choose (1, n-1)
+>        let r = n - l
+>        m <- choose (max l r, l * r)
+>        let rem = 2*m > l*r
+>            edge k = let (a,b) = k `divMod` r
+>                     in (N (a+1), N (l+b+1)) :: (Node Left , Node Right)
+>        xs <- arbitraryDistinct (if rem then l * r - m else m) (0, l * r - 1)
+>        return . ArbGraph . S.fromAscList . map edge
+>            $
+>            if rem then remove xs [0 .. l * r - 1] else xs
 
+> sqr :: Int -> Int
+> sqr x = x * x
+
+> sqrt' :: Int -> Int
+> sqrt' = floor . sqrt . (fromIntegral :: Int -> Double)
+
+Under the precondition that both arguments are sorted in ascending
+order, `remove xs ys` removes all elements in `xs` from the list `ys`.
+A single occurrence in `xs` removes all occurrences in `ys`.  Multiple
+occurrences in `xs` are not relevant.
+
+> remove :: Ord a => [a] -> [a] -> [a]
+> remove (x:xs) ys
+>   = let (as, bs) = span (< x) ys
+>     in as ++ remove xs (dropWhile (== x) bs)
+> remove _ ys = ys
+
+
+
+Better distribution, first successful version.  Very slow for large graphs.
+
+ > arbitraryGraph :: Int -> Gen ArbGraph
+ > arbitraryGraph size
+ >   = do m <- floor . sqrt . (fromIntegral :: Int -> Double) <$> choose (1, size ^ (2 :: Int))
+ >        l <- choose (1, m)
+ >        r <- choose (ceiling $ (fromIntegral m :: Double) / fromIntegral l, 2 * m - l)
+ >        lds <- map succ <$> arbitrarySum l (m - l)
+ >        let n = l + r
+ >            ls = [N 1 :: Node Left .. N l]
+ >            rs = [N (l+1) :: Node Right .. N n]
+ >        ArbGraph . S.fromList . concat
+ >          <$>
+ >          sequence
+ >          (zipWith (\l d -> map ((,) l) . take d <$> shuffle rs) ls lds)
+
+
+
+Original implementation with Leo
 
  `base l n` generates a minimal set of edges that guarantees exactly
  `n` nodes, `l` of which being left.
@@ -134,24 +171,6 @@ subterm of.
 
  > randomEdge :: Int -> Int -> Gen (Node Left, Node Right)
  > randomEdge l r = (,) <$> randomNode (1,l) <*> randomNode (l+1, l+r)
-
-
-----------------------------------------------------------------------
-Generally useful generators
-
-
-Chose `n` random integer values in the range `(0,s)` so that their sum
-is s.  Idea: choose `k=n-1` in the range `(0,s)`, sort them `r0 < … <
-rk`, then use the differences `[r0-0, r1-r0, r2-r1, ..., max-rk]`
-
-> arbitrarySum :: Int -> Int -> Gen [Int]
-> arbitrarySum n s
->   = do xs <- sequence . replicate (n-1) $ choose (0,s)
->        return . diffs $ sort xs
->   where
->     diffs xs = zipWith (-) (xs ++ [s]) (0 : xs)
-
-    sample $ (\xs -> (length xs, sum xs, xs)) <$> arbitrarySum 4 100
 
 
 ----------------------------------------------------------------------
