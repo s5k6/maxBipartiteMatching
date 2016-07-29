@@ -28,14 +28,14 @@ EOF
     
     # Generate test data if $dir does not exist.
 
-    # Large test: 2k graphs with up to 2000 nodes
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 2000 2000 >&2;
+    # Large test: 2k graphs with up to 1000 nodes
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 2000 1000 >&2;
 
-    # Small test: 500 graphs with up to 1k nodes
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 500 1000 >&2;
+    # Small test: 500 graphs with up to 500 nodes
+    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 500 500 >&2;
 
     # Tiny test: 200 graphs with up to 100 nodes
-    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 100 >&2;
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 100 >&2;
 
 fi;
 
@@ -49,6 +49,7 @@ cat <<EOF
 Calculating matchings, do this in parallell...
 EOF
 
+limit=30;
 
 for g in "$dir"/*.graph; do
 
@@ -60,12 +61,13 @@ for g in "$dir"/*.graph; do
             echo "Skipping: $g";
         else
             echo "Running $m on $g";
-            timeout -s9 30 /usr/bin/time \
+            timeout -s9 "$limit" /usr/bin/time \
               -o "$dir/$m.$b.time" \
               -f "%U %M" \
               "dist/build/$m/$m" "$g" \
               >| "$dir/$m.$b.out" \
-              || rm -f "$dir/$m.$b.time" &
+              || echo "${limit} DNF" >| "$dir/$m.$b.time" &
+              # || rm -f "$dir/$m.$b.time" &
         fi;
         
         while test "$(jobs | grep -c Running)" -ge "$cpus"; do
@@ -96,12 +98,12 @@ Aggregating timing...
 EOF
 
 for m in fgl matcher; do
+    rm -f "${dir}/timings.${m}";
     for f in "${dir}/${m}."*'.time'; do
         dat="$(sed -rn 's:[^.]*\.g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e:\1 \2 \3 \4:p' <<< "$(basename "$f" .time)")";
 
         echo "${dat} $(< $f)" >> "${dir}/timings.${m}";
-    done;
-    
+    done;    
 done;
 
 

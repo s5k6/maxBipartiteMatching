@@ -10,14 +10,16 @@ term = "png"
 
 set terminal term
 
-if (term eq "png") set terminal term size 1200, 900
+if (term eq "png") set terminal term size 1500, 1000
 if (term eq "pdf") set terminal term size 29.7 cm, 21.0 cm
 
 set key horizontal bmargin opaque samplen 1
 
+# entry in memory column: did not finish, time will be the limit
+set datafile missing "DNF"
 
-styleFgl     = "title 'fgl'     with points pt 1 ps 1 lt 1"
-styleMatcher = "title 'matcher' with points pt 6 ps 1 lt 2"
+styleFgl     = "title 'fgl'     with points pt 2 ps 1 lt 1"
+styleMatcher = "title 'matcher' with points pt 2 ps 1 lt 2"
 styleOther   = "with points pt 2 ps 1 lt 7"
 
 density = "(column(m)/(column(l)*column(r)))"
