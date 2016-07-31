@@ -2,17 +2,22 @@ Building
 --------
 
     $ cabal sandbox init &&
-      cabal build matcher &&
-      strip dist/build/matcher/matcher
+      cabal build matcher
+
+    $ dist/build/matcher/matcher
 
 
 Install library
 ---------------
 
     $ cabal sandbox init &&
-      cabal install
+      cabal install &&
+      cabal haddock
 
-Note: This will also install the demo tool `matcher`.
+    $ firefox dist/doc/html/maxBipartiteMatching/index.html
+
+    $ cabal exec ghci
+    Prelude> :m Data.Graph.MaxBipartiteMatching
 
 
 Testing

@@ -1,14 +1,15 @@
-|
-  Description : Maximum cardinality bipartite matching
-  Copyright   : © 2012 Stefan Klinger <http://stefan-klinger.de/>
-  License     : GNU AGPL 3 <http://www.gnu.org/licenses/agpl-3.0.html>
-  Maintainer  : http://stefan-klinger.de
-  Stability   : experimental
-
-Find a maximum cardinality matching on a bipartite graph, using an
-augmenting path algorithm.  More efficient than using MaxFlow from FGL
-with constant weight and additional source and sink nodes.  But not as
-good as Hopcroft–Karp would be.
+> {-|
+> Description : Maximum cardinality bipartite matching
+> Copyright   : © 2012 Stefan Klinger <http://stefan-klinger.de/>
+> License     : GNU AGPL 3 <http://www.gnu.org/licenses/agpl-3.0.html>
+> Maintainer  : http://stefan-klinger.de
+> Stability   : experimental
+> 
+> Find a maximum cardinality matching on a bipartite graph, using an
+> augmenting path algorithm.  More efficient than using MaxFlow from FGL
+> with constant weight and additional source and sink nodes.  But not as
+> good as Hopcroft–Karp would be.
+> -}
 
 > module Data.Graph.MaxBipartiteMatching ( matching ) where
 
@@ -56,12 +57,15 @@ edge, it is sufficient to store the matching in a map of type `Map β α`,
 i.e., backwards.  The invariant is being a proper matching, i.e., being
 injective.
 
-| Return a maximum cardinality matching.  The input graph is a 'S.Set'
-  (α,β) of edges, which implies being bipartite and simple.  The matching
-  is returned as an injective 'M.Map' β α, i.e., backwards.
-
-  >>> matching $ Data.Set.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
-  fromList [('a',1),('b',3),('c',2)]
+> {-|
+> Return a maximum cardinality matching.  The input graph is a 'S.Set'
+> (α,β) of edges, which implies being bipartite and simple.  The matching
+> is returned as an injective 'M.Map' β α, i.e., backwards.
+> 
+> >>> matching $ Data.Set.fromList [(1,'a'),(1,'b'),(2,'a'),(2,'c'),(3,'b')]
+> fromList [('a',1),('b',3),('c',2)]
+> 
+> -}
 
 > matching :: (Ord a, Ord b) => S.Set (a,b) -> M.Map b a
 > matching g = opt (M.keys fwd, []) fwd M.empty
