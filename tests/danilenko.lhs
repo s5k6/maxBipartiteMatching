@@ -10,16 +10,22 @@
 > from "-" = getContents
 > from fn = readFile fn
 
-> edgeList :: (Ord a, Ord b) => [(a,b)] -> [(a,[b])]
-> edgeList
+> edgeList :: [(Int,Int)] -> Graph
+> edgeList g
 >   = M.toList
 >     .
 >     M.map S.toList
 >     .
 >     foldl (\m (x,y) -> M.insertWith S.union x (S.singleton y) m) M.empty
+>     $
+>     [ e
+>     | (x,y) <- g
+>     , e <- [(x,y), (y,x)]
+>     ]
 
 > edgeCount :: [(a,[b])] -> Int
-> edgeCount = sum . map (length . snd)
+> edgeCount = (`div` 2) . sum . map (length . snd)
+
 
 > main :: IO ()
 > main

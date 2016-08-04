@@ -32,10 +32,10 @@ EOF
     #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 2000 1000 >&2;
 
     # Small test: 500 graphs with up to 500 nodes
-    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 500 500 >&2;
+    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 500 500 >&2;
 
     # Tiny test: 200 graphs with up to 100 nodes
-    #dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 100 >&2;
+    dist/build/mkGraphs/mkGraphs "$cpus" "$dir" 200 100 >&2;
 
 fi;
 
@@ -46,7 +46,7 @@ ls "$dir" | sed -rn 's:g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e.graph:\1 \2 \3 \4
 
 cat <<EOF
 ----------------------------------------------------------------------
-Calculating matchings, do this in parallell...
+Calculating matchings, do this in parallel...
 EOF
 
 limit=30;
@@ -55,7 +55,7 @@ for g in "$dir"/*.graph; do
 
     b="$(basename "$g" .graph)";
 
-    for m in fgl matcher; do
+    for m in fgl matcher danilenko; do
 
         if test -e "$dir/$m.$b.time"; then
             echo "Skipping: $g";
@@ -86,8 +86,18 @@ cat <<EOF
 Comparing all outputs...
 EOF
 
-for i in "$dir"/*.graph; do
-    cmp "$dir"/{matcher,fgl}.$(basename "$i" .graph).out || true;
+function c {
+    test -s "$1" || return 0;
+    test -s "$2" || return 0;
+    cmp "$1" "$2";
+}
+
+for g in "$dir"/*.graph; do
+    o="$(basename "$g" .graph).out";
+
+    c "${dir}/matcher.${o}" "${dir}/fgl.${o}"
+    c "${dir}/matcher.${o}" "${dir}/danilenko.${o}"
+    c "${dir}/fgl.${o}"     "${dir}/danilenko.${o}"
 done;
 
 
@@ -97,7 +107,7 @@ cat <<EOF
 Aggregating timing...
 EOF
 
-for m in fgl matcher; do
+for m in fgl matcher danilenko; do
     rm -f "${dir}/timings.${m}";
     for f in "${dir}/${m}."*'.time'; do
         dat="$(sed -rn 's:[^.]*\.g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e:\1 \2 \3 \4:p' <<< "$(basename "$f" .time)")";

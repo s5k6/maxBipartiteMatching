@@ -18,9 +18,10 @@ set key horizontal bmargin opaque samplen 1
 # entry in memory column: did not finish, time will be the limit
 set datafile missing "DNF"
 
-styleFgl     = "title 'fgl'     with points pt 2 ps 1 lt 1"
-styleMatcher = "title 'matcher' with points pt 2 ps 1 lt 2"
-styleOther   = "with points pt 2 ps 1 lt 7"
+styleFgl       = "title 'fgl-maxFlow' with points pt 2 ps 1 lt 1"
+styleDanilenko = "title 'Danilenko'   with points pt 2 ps 1 lt 4"
+styleMatcher   = "title 'matcher'     with points pt 2 ps 1 lt 2"
+styleOther     = "with points pt 2 ps 1 lt 7"
 
 density = "(column(m)/(column(l)*column(r)))"
 size = "(column(l) + column(r) + column(m))"
@@ -70,8 +71,9 @@ set xlabel "#V + #E"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes+edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @size:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using @size:cpu  @styleMatcher
+plot "tmp/timings.fgl"        using @size:cpu  @styleFgl, \
+     "tmp/timings.danilenko"  using @size:cpu  @styleDanilenko, \
+     "tmp/timings.matcher"    using @size:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -82,8 +84,9 @@ set xlabel "#V"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @nodes:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using @nodes:cpu  @styleMatcher
+plot "tmp/timings.fgl"        using @nodes:cpu  @styleFgl, \
+     "tmp/timings.danilenko"  using @nodes:cpu  @styleDanilenko, \
+     "tmp/timings.matcher"    using @nodes:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -94,8 +97,9 @@ set xlabel "#E"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using m:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using m:cpu  @styleMatcher
+plot "tmp/timings.fgl"        using m:cpu  @styleFgl, \
+     "tmp/timings.danilenko"  using m:cpu  @styleDanilenko, \
+     "tmp/timings.matcher"    using m:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -106,8 +110,9 @@ set xlabel "#E / (#left * #right)"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_density.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @density:cpu  @styleFgl, \
-     "tmp/timings.matcher"  using @density:cpu  @styleMatcher
+plot "tmp/timings.fgl"        using @density:cpu  @styleFgl, \
+     "tmp/timings.danilenko"  using @density:cpu  @styleDanilenko, \
+     "tmp/timings.matcher"    using @density:cpu  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -118,8 +123,9 @@ set xlabel "#V + #E"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes+edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @size:rss  @styleFgl, \
-     "tmp/timings.matcher"  using @size:rss  @styleMatcher
+plot "tmp/timings.fgl"        using @size:rss  @styleFgl, \
+     "tmp/timings.danilenko"  using @size:rss  @styleDanilenko, \
+     "tmp/timings.matcher"    using @size:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -130,8 +136,9 @@ set xlabel "#V"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @nodes:rss  @styleFgl, \
-     "tmp/timings.matcher"  using @nodes:rss  @styleMatcher
+plot "tmp/timings.fgl"        using @nodes:rss  @styleFgl, \
+     "tmp/timings.danilenko"  using @nodes:rss  @styleDanilenko, \
+     "tmp/timings.matcher"    using @nodes:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -142,8 +149,9 @@ set xlabel "#E"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_edges.%s", dir, term)
 
-plot "tmp/timings.fgl"      using m:rss  @styleFgl, \
-     "tmp/timings.matcher"  using m:rss  @styleMatcher
+plot "tmp/timings.fgl"        using m:rss  @styleFgl, \
+     "tmp/timings.danilenko"  using m:rss  @styleDanilenko, \
+     "tmp/timings.matcher"    using m:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close
 
@@ -154,7 +162,8 @@ set xlabel "#E / (#left * #right)"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_density.%s", dir, term)
 
-plot "tmp/timings.fgl"      using @density:rss  @styleFgl, \
-     "tmp/timings.matcher"  using @density:rss  @styleMatcher
+plot "tmp/timings.fgl"        using @density:rss  @styleFgl, \
+     "tmp/timings.danilenko"  using @density:rss  @styleDanilenko, \
+     "tmp/timings.matcher"    using @density:rss  @styleMatcher
 
 if (term eq "wxt") pause mouse close

@@ -1,7 +1,7 @@
 > {-# LANGUAGE TemplateHaskell #-}
 
 > import ArbGraph
-> import DanilenkoMatcher ( maximumMatching )
+> import qualified DanilenkoMatcher as D
 
 > import Data.Graph.MaxBipartiteMatching ( matching )
 > import System.Environment ( getArgs )
@@ -13,16 +13,23 @@
 
 ----------------------------------------------------------------------
 
-> edgeList :: (Ord a, Ord b) => [(a,b)] -> [(a,[b])]
-> edgeList
+> edgeList :: Graph -> D.Graph
+> edgeList g
 >   = M.toList
 >     .
 >     M.map S.toList
 >     .
 >     foldl (\m (x,y) -> M.insertWith S.union x (S.singleton y) m) M.empty
+>     $
+>     [ e
+>     | (x,y) <- S.toList g
+>     , let x' = fromEnum x
+>           y' = fromEnum y
+>     , e <- [(x',y'), (y',x')]
+>     ]
 
 > edgeCount :: [(a,[b])] -> Int
-> edgeCount = sum . map (length . snd)
+> edgeCount = (`div` 2) . sum . map (length . snd)
 
 ----------------------------------------------------------------------
 Properties
@@ -37,7 +44,7 @@ the same size.
 >     &&
 >     M.size (matching g)
 >     ==
->     (edgeCount . maximumMatching . edgeList . map (\(N a, N b)-> (a,b)) $ S.toList g)
+>     (edgeCount . D.maximumMatching $ edgeList g)
 
 
 
@@ -51,15 +58,6 @@ nodes are distinct.
 >                             (S.fromList $ map fromEnum rs)
 >   where
 >   (ls, rs) = unzip $ S.toList g
-
-
-
-Producing a non-disjoint graph (in the sense tested above) is a
-failure in this testsuite.
-
-> prop_selftest :: ArbGraph -> Bool
-> prop_selftest (ArbGraph g)
->   = disjoint g
 
 
 ----------------------------------------------------------------------
