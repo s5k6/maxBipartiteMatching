@@ -52,6 +52,7 @@ Modules to provide data structures
 > import qualified Data.Map as M
 > import System.Environment ( getArgs )
 > import System.Exit ( exitFailure )
+> import Helper
 
 ----------------------------------------------------------------------
 Helper functions for properties
@@ -122,9 +123,5 @@ Checking all properties
 >   where
 >     parseArgs as
 >       = null as ? stdArgs $ stdArgs{ maxSuccess = read $ head as }
-
-> infix 1 ?
-> (?) :: Bool -> t -> t -> t
-> c ? x = \y-> if c then x else y
 
 ======================================================================

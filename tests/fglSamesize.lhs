@@ -9,6 +9,7 @@
 > import Test.QuickCheck
 > import qualified Data.Map as M
 > import qualified Data.Set as S
+> import Helper
 
 
 ----------------------------------------------------------------------
@@ -71,8 +72,5 @@ Checking all properties
 >     parseArgs as
 >       = null as ? stdArgs $ stdArgs{ maxSuccess = read $ head as }
 
-> infix 1 ?
-> (?) :: Bool -> t -> t -> t
-> c ? x = \y-> if c then x else y
 
 ======================================================================
