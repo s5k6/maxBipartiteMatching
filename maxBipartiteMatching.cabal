@@ -46,9 +46,9 @@ test-suite quickcheck
     build-depends: base, containers, QuickCheck
     extensions: EmptyDataDecls
 
-test-suite fglCompare
+test-suite fgl-qc
     type: exitcode-stdio-1.0
-    main-is: fglSamesize.lhs
+    main-is: fgl-qc.lhs
     ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
     hs-source-dirs: src, tests
     build-depends: base, containers, QuickCheck, fgl
@@ -65,9 +65,9 @@ executable fgl
     build-depends: base, containers, fgl
     extensions: EmptyDataDecls
 
-test-suite danilenkoCompare
+test-suite danilenko-qc
     type: exitcode-stdio-1.0
-    main-is: danilenkoSamesize.lhs
+    main-is: danilenko-qc.lhs
     ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
     hs-source-dirs: src, tests
     build-depends: base, containers, QuickCheck

@@ -1,7 +1,6 @@
 > module Main ( main ) where
 
-> import FglMatcher
-> import qualified Data.Set as S
+> import FglInterface as F
 > import System.Environment ( getArgs )
 
 
@@ -13,8 +12,8 @@
 > main
 >     = do as <- getArgs
 >          case as of
->            [i] -> putStrLn . show . fglMatchingSize . S.fromList . pairs . lines =<< from i
->            other -> putStrLn "FIXME"
+>            [i] -> print . F.matchingSize . F.graph . pairs . lines =<< from i
+>            other -> putStrLn  "This minimalist program reads a graph from the file given, and prints\nthe size of a maximum flow a calculated with FGL after adding source\nand sink."
 >     where
 >     pairs (l:ls) = case words l of
 >                      (x:y:_) -> (read y :: Int, read x :: Int) : pairs ls

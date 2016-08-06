@@ -1,7 +1,7 @@
 > {-# LANGUAGE TemplateHaskell #-}
 
 > import ArbGraph
-> import FglMatcher
+> import FglInterface as F
 
 > import Data.Graph.MaxBipartiteMatching ( matching )
 > import System.Environment ( getArgs )
@@ -20,33 +20,9 @@ A matching calculated with FGL's maxFlow will have the same size.
 
 > prop_samesize :: ArbGraph -> Bool
 > prop_samesize (ArbGraph g)
->   = disjoint g
->     &&
->     M.size (matching g)
+>   = M.size (matching g)
 >     ==
->     fglMatchingSize (S.map (\(a,b) -> (fromEnum a, fromEnum b)) g)
-
-
-
-The FGL matcher does not provide different namespaces for left and
-right nodes, so we need to make sure that the integer labels of the
-nodes are distinct.
-
-> disjoint :: Graph -> Bool
-> disjoint g
->   = S.null $ S.intersection (S.fromList $ map fromEnum ls)
->                             (S.fromList $ map fromEnum rs)
->   where
->   (ls, rs) = unzip $ S.toList g
-
-
-
-Producing a non-disjoint graph (in the sense tested above) is a
-failure in this testsuite.
-
-> prop_selftest :: ArbGraph -> Bool
-> prop_selftest (ArbGraph g)
->   = disjoint g
+>     (F.matchingSize $ F.graph $ S.toList g)
 
 
 ----------------------------------------------------------------------

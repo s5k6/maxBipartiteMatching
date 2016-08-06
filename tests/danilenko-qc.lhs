@@ -1,7 +1,7 @@
 > {-# LANGUAGE TemplateHaskell #-}
 
 > import ArbGraph
-> import qualified DanilenkoMatcher as D
+> import qualified DanilenkoInterface as D
 
 > import Data.Graph.MaxBipartiteMatching ( matching )
 > import System.Environment ( getArgs )
@@ -12,52 +12,55 @@
 
 
 ----------------------------------------------------------------------
+Helper functions for properties
 
-> edgeList :: Graph -> D.Graph
-> edgeList g
->   = M.toList
->     .
->     M.map S.toList
->     .
->     foldl (\m (x,y) -> M.insertWith S.union x (S.singleton y) m) M.empty
->     $
->     [ e
->     | (x,y) <- S.toList g
->     , let x' = fromEnum x
->           y' = fromEnum y
->     , e <- [(x',y'), (y',x')]
->     ]
 
-> edgeCount :: [(a,[b])] -> Int
-> edgeCount = (`div` 2) . sum . map (length . snd)
+> swap :: (a, b) -> (b, a)
+> swap (x, y) = (y, x)
+
+
+
+Get the graph induced by the matching.
+
+> isSubgraphOf :: D.Graph -> D.Graph -> Bool
+> isSubgraphOf a b
+>   = M.isSubmapOfBy S.isSubsetOf (conv a) (conv b)
+>   where
+>     conv = M.map S.fromAscList . M.fromAscList
+
 
 ----------------------------------------------------------------------
 Properties
 
 
-A matching calculated with Nikita Danilenko's implementation will have
-the same size.
+A matching calculated with Danilenko's implementation will have the
+same size.
 
 > prop_samesize :: ArbGraph -> Bool
 > prop_samesize (ArbGraph g)
->   = disjoint g
->     &&
->     M.size (matching g)
+>   = M.size (matching g)
 >     ==
->     (edgeCount . D.maximumMatching $ edgeList g)
+>     (D.edgeCount . D.matching . D.graph $ S.toList g)
 
 
 
-The FGL matcher does not provide different namespaces for left and
-right nodes, so we need to make sure that the integer labels of the
-nodes are distinct.
+The graph induced by a matching must be a subgraph of the original.
 
-> disjoint :: Graph -> Bool
-> disjoint g
->   = S.null $ S.intersection (S.fromList $ map fromEnum ls)
->                             (S.fromList $ map fromEnum rs)
->   where
->   (ls, rs) = unzip $ S.toList g
+> prop_subset :: ArbGraph -> Bool
+> prop_subset (ArbGraph g)
+>   = (D.matching . D.graph $ S.toList g)
+>     `isSubgraphOf`
+>     (D.graph $ S.toList g)
+
+
+
+The graph with reversed edges produces a matching of the same size.
+
+> prop_symmetric :: ArbGraph -> Bool
+> prop_symmetric (ArbGraph g)
+>   = (D.edgeCount . D.matching . D.graph $ S.toList g)
+>     ==
+>     (D.edgeCount . D.matching . D.graph . map swap $ S.toList g)
 
 
 ----------------------------------------------------------------------
