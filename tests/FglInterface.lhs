@@ -1,3 +1,6 @@
+
+Interface to FGL algorithm calculating the size of an MCBM.
+
 > module FglInterface
 >        ( graph
 >        , matchingSize

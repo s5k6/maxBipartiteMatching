@@ -1,3 +1,7 @@
+
+Module for creating random bipartite graphs.
+
+
 > module ArbGraph
 >   ( Node(..), Graph, Matching, ArbGraph(..)
 >   , arbGraph

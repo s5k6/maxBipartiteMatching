@@ -1,3 +1,6 @@
+
+QuickCheck tests for Danilenko's MCBM algorithm.
+
 > {-# LANGUAGE TemplateHaskell #-}
 
 > import ArbGraph

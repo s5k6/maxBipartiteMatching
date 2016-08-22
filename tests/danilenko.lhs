@@ -1,3 +1,7 @@
+
+Command line program to calculate the size of a MCBM using Danilenko's
+algorithm.  Used for performance testing.
+
 > module Main ( main ) where
 
 > import DanilenkoInterface

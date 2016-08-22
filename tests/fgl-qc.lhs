@@ -1,3 +1,7 @@
+
+QuickCheck test compares MCBM size calculated using my and FGL's
+algorithm.
+
 > {-# LANGUAGE TemplateHaskell #-}
 
 > import ArbGraph

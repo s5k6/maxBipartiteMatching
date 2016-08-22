@@ -1,3 +1,7 @@
+
+Command line program to calculate the size of a MCBM using FGL's maxFlow
+algorithm.  Used for performance testing.
+
 > module Main ( main ) where
 
 > import FglInterface as F

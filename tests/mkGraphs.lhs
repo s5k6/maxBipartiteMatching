@@ -1,3 +1,6 @@
+
+Command line tool to generate random bipartite graphs.
+
 > module Main where
 
 > import ArbGraph

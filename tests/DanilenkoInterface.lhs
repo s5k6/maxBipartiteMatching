@@ -1,3 +1,6 @@
+
+Interface to the MCBM algorithm by Danilenko.
+
 > module DanilenkoInterface
 >        ( Graph, matching, graph, edgeCount
 >        ) where
