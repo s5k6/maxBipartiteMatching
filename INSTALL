@@ -1,20 +1,23 @@
-Building
---------
+Building the command line tool
+------------------------------
 
-    $ cabal sandbox init &&
-      cabal build matcher
+    $ make
+
+Running should print a help message:
 
     $ dist/build/matcher/matcher
 
 
-Install library
----------------
+Install the library
+-------------------
 
-    $ cabal sandbox init &&
-      cabal install &&
-      cabal haddock
+    $ make library
+
+Documentation:
 
     $ firefox dist/doc/html/maxBipartiteMatching/index.html
+
+Using:
 
     $ cabal exec ghci
     Prelude> :m Data.Graph.MaxBipartiteMatching
@@ -23,41 +26,48 @@ Install library
 Testing
 -------
 
-    $ cabal sandbox init &&
-      cabal install --only-dependencies --enable-tests &&
-      cabal test
+    $ make test
 
-    $ cabal sandbox init &&
-      cabal install --only-dependencies --enable-tests --flag danilenko &&
-      cabal configure --enable-tests --flag danilenko &&
-      cabal test
+This contains three test suites.  Both require QuickCheck.
+`quickcheck` only checks some properties not relating to other
+implementations.  `fgl-qc` also needs the Functional Graph Library,
+and compares the sizes of matchings generated with both
+implementations.
 
-
-This contains two test suites.  Both require QuickCheck, `quickcheck`
-only checks some properties not relating to other implementations.
-`fglCompare` also needs the Functional Graph Library, and compares the
-sizes of matchings generated with both implementations.
+Only if the file `tests/DanilenkoOriginal.hs` is present:
+`danilenko-qc` tests some properties of a matching calculated with
+that [1] algorithm, and compares the size with a mathcing calculated
+with this implementation.  The file is not included in this
+distribution but was kindly provided by its author.
 
 
 Performance shootout
 --------------------
 
-Currently the only other running implementation is FGL's maxFlow.
+Note: This may take considerable time and consume all CPUs you have.
 
-Note: This will take a long time and consume all CPUs you have.
+    $ make shootout
 
-    $ cabal sandbox init &&
-      cabal install --only-dependencies --flag buildPerfTest &&
-      cabal configure --flag buildPerfTest &&
-      cabal build &&
-      scripts/shootout
+Creates random graphs (only very vew by default) as defined in the
+file `scripts/shootout`.  Then this matching algorithm, and `maxFlow`
+from the FGL [2] are used to calculate the size of a MCBM, collecting
+and plotting performance data.
 
-    $ cabal sandbox init &&
-      cabal install --only-dependencies --flag danilenko --flag buildPerfTest &&
-      cabal configure --flag danilenko --flag buildPerfTest &&
-      cabal build &&
-      scripts/shootout
+Only if the file `tests/DanilenkoOriginal.hs` is present: Performance
+will also be plotted for a MCBMs calculated with that [1] algorithm.
+The file is not included in this distribution but was kindly provided
+by its author.
 
-The last command will use gnuplot to create the plots as
-`./tmp/*.png`.  The plotting script is prepared for creating PDF or
-interactive plots as well, see there.
+Gnuplot is used to create the plots as `./tmp/*.png`.  The plotting
+script is prepared for creating PDF or interactive plots as well, see
+there.
+
+____________________
+
+[1] Nikita Danilenko.  Using Relations to Develop a Haskell Program
+    for Computing Maximum Bipartite Matchings.  RAMiCS 2012, LNCS
+    7560, pp. 130-145, Springer 2014.
+    http://www.rpe.informatik.uni-kiel.de/en/Staff/dipl.-math.-nikita-danilenko
+    
+[2] Martin Erwig's Functional Graph Library
+    https://hackage.haskell.org/package/fgl
