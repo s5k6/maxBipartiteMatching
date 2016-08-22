@@ -17,24 +17,19 @@ Documentation:
 
     $ firefox dist/doc/html/maxBipartiteMatching/index.html
 
-Using:
-
-    $ cabal exec ghci
-    Prelude> :m Data.Graph.MaxBipartiteMatching
-
 
 Testing
 -------
 
     $ make test
 
-This contains three test suites.  Both require QuickCheck.
+This contains three test suites, all require QuickCheck.  Test suite
 `quickcheck` only checks some properties not relating to other
 implementations.  `fgl-qc` also needs the Functional Graph Library,
 and compares the sizes of matchings generated with both
 implementations.
 
-Only if the file `tests/DanilenkoOriginal.hs` is present:
+Only if the file `tests/DanilenkoOriginal.hs` is present: Test suite
 `danilenko-qc` tests some properties of a matching calculated with
 that [1] algorithm, and compares the size with a mathcing calculated
 with this implementation.  The file is not included in this
@@ -48,7 +43,7 @@ Note: This may take considerable time and consume all CPUs you have.
 
     $ make shootout
 
-Creates random graphs (only very vew by default) as defined in the
+Creates random graphs (only very few by default) as defined in the
 file `scripts/shootout`.  Then this matching algorithm, and `maxFlow`
 from the FGL [2] are used to calculate the size of a MCBM, collecting
 and plotting performance data.
@@ -59,8 +54,8 @@ The file is not included in this distribution but was kindly provided
 by its author.
 
 Gnuplot is used to create the plots as `./tmp/*.png`.  The plotting
-script is prepared for creating PDF or interactive plots as well, see
-there.
+script is prepared for creating PDF, SVG or interactive plots as well,
+see there.
 
 ____________________
 

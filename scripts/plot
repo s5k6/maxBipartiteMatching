@@ -4,6 +4,7 @@ dir = "./tmp";
 
 term = "wxt";
 term = "png"
+#term = "svg"
 #term="pdf";
 
 
@@ -11,16 +12,18 @@ term = "png"
 set terminal term
 
 if (term eq "png") set terminal term size 1500, 1000
+if (term eq "svg") set terminal term size 1200, 800 background rgb 'white'
 if (term eq "pdf") set terminal term size 29.7 cm, 21.0 cm
 
-set key horizontal bmargin opaque samplen 1
+set key vertical rmargin samplen 1
+set autoscale fix
 
 # entry in memory column: did not finish, time will be the limit
 set datafile missing "DNF"
 
 styleFgl       = "title 'fgl-maxFlow' with points pt 2 ps 1 lt 1"
 styleDanilenko = "title 'Danilenko'   with points pt 2 ps 1 lt 4"
-styleMatcher   = "title 'matcher'     with points pt 2 ps 1 lt 2"
+styleMatcher   = "title 'my algo'     with points pt 2 ps 1 lt 2"
 styleOther     = "with points pt 2 ps 1 lt 7"
 
 density = "(column(m)/(column(l)*column(r)))"
@@ -31,7 +34,7 @@ nodes = "(column(l) + column(r))"
 # plotting the distribution of samples
 
 
-set title "distribution of samples: edge count / node count"
+set title "{/=18 distribution of samples}\nedge count / node count"
 set xlabel "#V"
 set ylabel "#E"
 if (term ne "wxt") set output sprintf("%s/nodes_edges.%s", dir, term)
@@ -44,7 +47,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "distribution of samples: density / size"
+set title "{/=18 distribution of samples}\ndensity / size"
 set xlabel "#V + #E"
 set ylabel "#E / (#left * #right)"
 if (term ne "wxt") set output sprintf("%s/density_size.%s", dir, term)
@@ -66,7 +69,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "running time / graph size"
+set title "{/=18 CPU}\nrunning time / graph size"
 set xlabel "#V + #E"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes+edges.%s", dir, term)
@@ -79,7 +82,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "running time / node count"
+set title "{/=18 CPU}\nrunning time / node count"
 set xlabel "#V"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_nodes.%s", dir, term)
@@ -92,7 +95,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "running time / edge count"
+set title "{/=18 CPU}\nrunning time / edge count"
 set xlabel "#E"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_edges.%s", dir, term)
@@ -105,7 +108,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "running time / density"
+set title "{/=18 CPU}\nrunning time / density"
 set xlabel "#E / (#left * #right)"
 set ylabel "time [s]"
 if (term ne "wxt") set output sprintf("%s/cpu_density.%s", dir, term)
@@ -118,7 +121,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "memory consumption / graph size"
+set title "{/=18 Memory}\nmemory consumption / graph size"
 set xlabel "#V + #E"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes+edges.%s", dir, term)
@@ -131,7 +134,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "memory consumption / node count"
+set title "{/=18 Memory}\nmemory consumption / node count"
 set xlabel "#V"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_nodes.%s", dir, term)
@@ -144,7 +147,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "memory consumption / edge count"
+set title "{/=18 Memory}\nmemory consumption / edge count"
 set xlabel "#E"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_edges.%s", dir, term)
@@ -157,7 +160,7 @@ if (term eq "wxt") pause mouse close
 
 
 
-set title "memory consumption / density"
+set title "{/=18 Memory}\nmemory consumption / density"
 set xlabel "#E / (#left * #right)"
 set ylabel "max RSS [kB]"
 if (term ne "wxt") set output sprintf("%s/mem_density.%s", dir, term)

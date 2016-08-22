@@ -27,6 +27,9 @@ shootout : cabal.sandbox.config
 	cabal build
 	scripts/shootout
 
+README.html : README.md
+	pandoc -s -t html <README.md >| README.html
+
 cabal.sandbox.config :
 	cabal sandbox init
 
