@@ -25,6 +25,10 @@ flag buildPerfTest
     description: Build performance testing and comparison
     default: False
 
+flag danilenko
+    description: Compare with Nikita Danilenko's implementation; NOT INCLUDED!
+    default: False
+
 library
     exposed-modules: Data.Graph.MaxBipartiteMatching
     hs-source-dirs: src
@@ -66,6 +70,10 @@ executable fgl
     extensions: EmptyDataDecls
 
 test-suite danilenko-qc
+    if flag(danilenko)
+        buildable: True
+    else
+        buildable: False
     type: exitcode-stdio-1.0
     main-is: danilenko-qc.lhs
     ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
@@ -74,7 +82,7 @@ test-suite danilenko-qc
     extensions: EmptyDataDecls
 
 executable danilenko
-    if flag(buildPerfTest)
+    if flag(danilenko) && flag(buildPerfTest)
         buildable: True
     else
         buildable: False

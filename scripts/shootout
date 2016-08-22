@@ -51,11 +51,16 @@ EOF
 
 limit=30;
 
+binaries='';
+for m in fgl matcher danilenko; do
+    test -x "dist/build/$m/$m" && binaries+=" $m";
+done;
+
 for g in "$dir"/*.graph; do
 
     b="$(basename "$g" .graph)";
 
-    for m in fgl matcher danilenko; do
+    for m in $binaries; do
 
         if test -e "$dir/$m.$b.time"; then
             echo "Skipping: $g";
@@ -107,7 +112,7 @@ cat <<EOF
 Aggregating timing...
 EOF
 
-for m in fgl matcher danilenko; do
+for m in $binaries; do
     rm -f "${dir}/timings.${m}";
     for f in "${dir}/${m}."*'.time'; do
         dat="$(sed -rn 's:[^.]*\.g([0-9]+)-([0-9]+)l-([0-9]+)r-([0-9]+)e:\1 \2 \3 \4:p' <<< "$(basename "$f" .time)")";
@@ -129,6 +134,12 @@ EOF
 
 
 cat <<EOF
+
+NOTE: If you see warnings about missing files, that should be ok.  The
+      corresponding data was just not created.  See INSTALL.
+
+All plots should be in the \`${dir}/\` subdirectory now.
+
 ----------------------------------------------------------------------
 You can edit \`scripts/plot\` and relaunch just that to plot the
 same data in different output formats.

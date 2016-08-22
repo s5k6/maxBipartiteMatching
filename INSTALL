@@ -24,8 +24,14 @@ Testing
 -------
 
     $ cabal sandbox init &&
-      cabal install --enable-tests --only-dependencies &&
+      cabal install --only-dependencies --enable-tests &&
       cabal test
+
+    $ cabal sandbox init &&
+      cabal install --only-dependencies --enable-tests --flag danilenko &&
+      cabal configure --enable-tests --flag danilenko &&
+      cabal test
+
 
 This contains two test suites.  Both require QuickCheck, `quickcheck`
 only checks some properties not relating to other implementations.
@@ -41,8 +47,14 @@ Currently the only other running implementation is FGL's maxFlow.
 Note: This will take a long time and consume all CPUs you have.
 
     $ cabal sandbox init &&
-      cabal install --enable-tests --only-dependencies --flag buildPerfTest &&
-      cabal configure  --enable-tests --flag buildPerfTest &&
+      cabal install --only-dependencies --flag buildPerfTest &&
+      cabal configure --flag buildPerfTest &&
+      cabal build &&
+      scripts/shootout
+
+    $ cabal sandbox init &&
+      cabal install --only-dependencies --flag danilenko --flag buildPerfTest &&
+      cabal configure --flag danilenko --flag buildPerfTest &&
       cabal build &&
       scripts/shootout
 
