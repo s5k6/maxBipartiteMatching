@@ -1,3 +1,12 @@
+
+default :
+	#
+	# WARNING: Using `make` is outdated.  See `INSTALL` and use
+	# `stack` instead.  Not all features have been ported to the
+	# new build system.
+	#
+	false
+
 .PHONY : dist-clean library test
 
 # This makefile adapts to whether the file

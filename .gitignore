@@ -5,3 +5,4 @@ dist/
 matcher
 tmp
 tests/DanilenkoOriginal.hs
+.stack-work

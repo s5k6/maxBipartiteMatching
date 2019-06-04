@@ -1,27 +1,22 @@
 Building the command line tool
 ------------------------------
 
-    $ make
+    $ stack build
 
 Running should print a help message:
 
-    $ dist/build/matcher/matcher
+    $ stack exec matcher
 
+You may also use the binary directly:
 
-Install the library
--------------------
-
-    $ make library
-
-Documentation:
-
-    $ firefox dist/doc/html/maxBipartiteMatching/index.html
+    $ stack install --local-bin-path=.
+    $ ./matcher
 
 
 Testing
 -------
 
-    $ make test
+    $ stack test
 
 This contains three test suites, all require QuickCheck.  Test suite
 `quickcheck` only checks some properties not relating to other
@@ -34,6 +29,11 @@ Only if the file `tests/DanilenkoOriginal.hs` is present: Test suite
 that [1] algorithm, and compares the size with a mathcing calculated
 with this implementation.  The file is not included in this
 distribution but was kindly provided by its author.
+
+
+===========================================================================
+Note: The rest of this documentation is outdated and would need
+      porting to use `stack` properly.
 
 
 Performance shootout
@@ -63,6 +63,6 @@ ____________________
     for Computing Maximum Bipartite Matchings.  RAMiCS 2012, LNCS
     7560, pp. 130-145, Springer 2014.
     http://www.rpe.informatik.uni-kiel.de/en/Staff/dipl.-math.-nikita-danilenko
-    
+
 [2] Martin Erwig's Functional Graph Library
     https://hackage.haskell.org/package/fgl

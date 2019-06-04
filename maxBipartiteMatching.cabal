@@ -41,6 +41,7 @@ executable matcher
     hs-source-dirs: src
     ghc-options: -Wall -Wno-name-shadowing -Wno-unused-matches -Werror
     build-depends: base, containers
+    other-modules: Data.Graph.MaxBipartiteMatching
                                   
 test-suite quickcheck
     type: exitcode-stdio-1.0
@@ -49,6 +50,7 @@ test-suite quickcheck
     hs-source-dirs: src, tests
     build-depends: base, containers, QuickCheck
     extensions: EmptyDataDecls
+    other-modules: ArbGraph, Data.Graph.MaxBipartiteMatching, Helper, QCHelper
 
 test-suite fgl-qc
     type: exitcode-stdio-1.0
@@ -57,6 +59,7 @@ test-suite fgl-qc
     hs-source-dirs: src, tests
     build-depends: base, containers, QuickCheck, fgl
     extensions: EmptyDataDecls
+    other-modules: ArbGraph, Data.Graph.MaxBipartiteMatching, Helper, QCHelper, FglInterface
 
 executable fgl
     if flag(buildPerfTest)
